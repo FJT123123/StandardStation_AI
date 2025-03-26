@@ -68,6 +68,17 @@ VERSION : 0.1
       ALM : "UDT_Valve_ALM";
    END_VAR
 
+   VAR CONSTANT
+      VALVE_STATE_INIT : UInt := 0;        // 初始状态
+      VALVE_STATE_CLOSED : UInt := 1;       // 已关闭
+      VALVE_STATE_OPENED : UInt := 2;       // 已打开
+      VALVE_STATE_OPENING : UInt := 3;      // 正在打开
+      VALVE_STATE_CLOSING : UInt := 4;      // 正在关闭
+      VALVE_STATE_CLOSE_FAULT : UInt := 5;  // 关阀故障
+      VALVE_STATE_OPEN_FAULT : UInt := 6;   // 开阀故障
+      VALVE_STATE_SENSOR_FAULT : UInt := 7; // 传感器故障
+   END_VAR
+
    VAR 
       xSensorFault : Bool;   // 传感器故障状态
       xOpenTimeout : Bool;   // 开阀超时状态
@@ -165,6 +176,23 @@ BEGIN
     END_IF;
     #LastOpenOK := Variable.OUT_xOpenOK;
     
-    // 状态字更新部分已移除
+        // 状态字更新
+    IF #xSensorFault THEN
+        HMI.OUT_uiState := #VALVE_STATE_SENSOR_FAULT;
+    ELSIF #xOpenTimeout THEN
+        HMI.OUT_uiState := #VALVE_STATE_OPEN_FAULT;
+    ELSIF #xCloseTimeout THEN
+        HMI.OUT_uiState := #VALVE_STATE_CLOSE_FAULT;
+    ELSIF Variable.OUT_xOpenOK THEN
+        HMI.OUT_uiState := #VALVE_STATE_OPENED;
+    ELSIF Variable.OUT_xCloseOK THEN
+        HMI.OUT_uiState := #VALVE_STATE_CLOSED;
+    ELSIF Map.OUT_xActualOut <> HMI.IN_xNormOpen THEN
+        HMI.OUT_uiState := #VALVE_STATE_OPENING;
+    ELSIF Map.OUT_xActualOut = HMI.IN_xNormOpen THEN
+        HMI.OUT_uiState := #VALVE_STATE_CLOSING;
+    ELSE
+        HMI.OUT_uiState := #VALVE_STATE_INIT;
+    END_IF;
 END_FUNCTION_BLOCK
 
