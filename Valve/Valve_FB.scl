@@ -1,0 +1,159 @@
+﻿TYPE "UDT_Valve_ALM"
+VERSION : 0.1
+   STRUCT
+      OUT_wALM : Word;   // 报警字/用于制作报警，用位来表示每一种报警
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "UDT_Valve_HMI"
+VERSION : 0.1
+   STRUCT
+      IN_xNormOpen : Bool;   // 常开常闭阀选择/常开为1，常闭为0
+      IN_xTimeoutEnable : Bool := true;   // 超时报警使能
+      IN_xManualOpen : Bool;   // 手动开
+      IN_xManualClose : Bool;   // 手动关
+      IN_xCounterReset : Bool;   // 计数复位
+      IN_xOpenCondition : Bool := true;   // 开阀运行条件
+      IN_xCloseCondition : Bool := true;   // 关阀运行条件
+      OUT_uiState : UInt;   // 状态字/用于显示状态
+      OUT_udiCount : UDInt;   // 计次
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "UDT_Valve_Map"
+VERSION : 0.1
+   STRUCT
+      IN_xOpenFeedback : Bool;   // 传感器开
+      IN_xCloseFeedback : Bool;   // 传感器关
+      OUT_xActualOut : Bool;   // 阀门控制
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "UDT_Valve_Retain"
+VERSION : 0.1
+   STRUCT
+      IN_tOpenTime : Time := T#10S;
+      IN_tCloseTime : Time := T#10S;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "UDT_Valve_​Variable"
+VERSION : 0.1
+   STRUCT
+      IN_xAutoCmd : Bool;   // 自动模式开阀
+      OUT_xOpenOK : Bool;   // 开到位
+      OUT_xCloseOK : Bool;   // 关到位
+   END_STRUCT;
+
+END_TYPE
+
+FUNCTION_BLOCK "Valve_FB"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      IN_xSys_EDS : Bool;
+      IN_xM_A : Bool;
+      IN_xREST : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      Map : "UDT_Valve_Map";
+      Variable : "UDT_Valve_​Variable";
+      HMI : "UDT_Valve_HMI";
+      "Retain" : "UDT_Valve_Retain";
+      ALM : "UDT_Valve_ALM";
+   END_VAR
+
+   VAR 
+      xSensorFault : Bool;   // 传感器故障状态
+      xOpenTimeout : Bool;   // 开阀超时状态
+      xCloseTimeout : Bool;   // 关阀超时状态
+   END_VAR
+
+
+BEGIN
+    // 自动/手动模式切换
+    IF IN_xM_A THEN
+        // 手动模式
+        IF HMI.IN_xManualOpen AND NOT HMI.IN_xManualClose AND HMI.IN_xOpenCondition THEN
+            Map.OUT_xActualOut := NOT HMI.IN_xNormOpen;
+        ELSIF NOT HMI.IN_xManualOpen AND HMI.IN_xManualClose AND HMI.IN_xCloseCondition THEN
+            Map.OUT_xActualOut := HMI.IN_xNormOpen;
+        END_IF;
+    ELSE
+        // 自动模式
+        IF Variable.IN_xAutoCmd AND HMI.IN_xOpenCondition THEN
+            Map.OUT_xActualOut := NOT HMI.IN_xNormOpen;
+        ELSIF NOT Variable.IN_xAutoCmd AND HMI.IN_xCloseCondition THEN
+            Map.OUT_xActualOut := HMI.IN_xNormOpen;
+        END_IF;
+    END_IF;
+    
+    // 开关状态反馈处理
+    IF HMI.IN_xTimeoutEnable THEN
+        // 超时报警使能时，使用传感器信号判断开关到位
+        Variable.OUT_xOpenOK := Map.IN_xOpenFeedback;
+        Variable.OUT_xCloseOK := Map.IN_xCloseFeedback;
+    ELSE
+        // 超时报警不使能时，使用控制输出信号判断开关到位
+        Variable.OUT_xOpenOK := (Map.OUT_xActualOut <> HMI.IN_xNormOpen);
+        Variable.OUT_xCloseOK := (Map.OUT_xActualOut = HMI.IN_xNormOpen);
+    END_IF;
+    
+    // 报警处理
+    // 集中处理所有报警相关的逻辑
+    // 1. 传感器故障检测
+    // 开关传感器同时为1或同时为0时，表示传感器故障
+    #xSensorFault := (Map.IN_xOpenFeedback AND Map.IN_xCloseFeedback) OR
+                     (NOT Map.IN_xOpenFeedback AND NOT Map.IN_xCloseFeedback);
+    
+    // 2. 超时报警处理
+    IF HMI.IN_xTimeoutEnable THEN
+        // 开阀超时
+        #xOpenTimeout := Map.OUT_xActualOut AND NOT Variable.OUT_xOpenOK;
+        // 关阀超时
+        #xCloseTimeout := NOT Map.OUT_xActualOut AND NOT Variable.OUT_xCloseOK;
+    ELSE
+        // 超时报警不使能时，清除超时状态
+        #xOpenTimeout := FALSE;
+        #xCloseTimeout := FALSE;
+    END_IF;
+    
+    // 3. 报警字更新
+    // Bit0: 开阀超时报警
+    ALM.OUT_wALM.%X0 := #xOpenTimeout;
+    // Bit1: 关阀超时报警
+    ALM.OUT_wALM.%X1 := #xCloseTimeout;
+    // Bit2: 传感器故障报警
+    ALM.OUT_wALM.%X2 := #xSensorFault;
+    
+    // 计数功能
+    IF HMI.IN_xCounterReset THEN
+        HMI.OUT_udiCount := 0;
+    ELSIF #IN_xREST THEN
+        IF Variable.OUT_xOpenOK AND NOT #IN_xSys_EDS THEN
+            HMI.OUT_udiCount := HMI.OUT_udiCount + 1;
+        END_IF;
+    END_IF;
+    
+    // 状态字更新
+    // 0=初始状态，1=关到位，2=开到位，3=关超时报警，4=开超时报警，5=传感器故障报警
+    IF Variable.OUT_xCloseOK THEN
+        HMI.OUT_uiState := 1;
+    ELSIF Variable.OUT_xOpenOK THEN
+        HMI.OUT_uiState := 2;
+    ELSIF #xCloseTimeout THEN
+        HMI.OUT_uiState := 3;
+    ELSIF #xOpenTimeout THEN
+        HMI.OUT_uiState := 4;
+    ELSIF #xSensorFault THEN
+        HMI.OUT_uiState := 5;
+    ELSE
+        HMI.OUT_uiState := 0;
+    END_IF;
+END_FUNCTION_BLOCK
+
