@@ -2,6 +2,9 @@
 VERSION : 0.1
    STRUCT
       OUT_wALM : Word;   // 报警字/用于制作报警，用位来表示每一种报警
+      OUT_xSensorFault : Bool;   // 传感器故障
+      OUT_xOpenTimeout : Bool;   // 开阀超时
+      OUT_xCloseTimeout : Bool;  // 关阀超时
    END_STRUCT;
 
 END_TYPE
@@ -120,50 +123,61 @@ BEGIN
     
     // 开关状态反馈处理
     // 根据报警使能状态选择反馈信号来源
-    Variable.OUT_xOpenOK := SEL(HMI.IN_xALMEnable, 
-                               (Map.OUT_xActualOut <> HMI.IN_xNormOpen),
-                               Map.IN_xOpenFeedback);
-    Variable.OUT_xCloseOK := SEL(HMI.IN_xALMEnable,
-                                (Map.OUT_xActualOut = HMI.IN_xNormOpen),
-                                Map.IN_xCloseFeedback);
+    Variable.OUT_xOpenOK := SEL(G := HMI.IN_xALMEnable, 
+                               IN0 := (Map.OUT_xActualOut <> HMI.IN_xNormOpen),
+                               IN1 := Map.IN_xOpenFeedback);
+    Variable.OUT_xCloseOK := SEL(G := HMI.IN_xALMEnable,
+                                IN0 := (Map.OUT_xActualOut = HMI.IN_xNormOpen),
+                                IN1 := Map.IN_xCloseFeedback);
     
     // 报警处理
     // 集中处理所有报警相关的逻辑
-    IF IN_xREST OR NOT HMI.IN_xALMEnable THEN
-        // 复位所有报警状态
+    IF IN_xREST THEN
+        // 只有通过复位按钮才能复位报警状态
         #xSensorFault := FALSE;
         #xOpenTimeout := FALSE;
         #xCloseTimeout := FALSE;
-    ELSE
+    END_IF;
+    
+    IF HMI.IN_xALMEnable THEN
         // 1. 传感器故障检测
         // 开关传感器同时为1或同时为0时，表示传感器故障
-        #xSensorFault := (Map.IN_xOpenFeedback AND Map.IN_xCloseFeedback) OR
-                         (NOT Map.IN_xOpenFeedback AND NOT Map.IN_xCloseFeedback);
+        IF (Map.IN_xOpenFeedback AND Map.IN_xCloseFeedback) OR
+           (NOT Map.IN_xOpenFeedback AND NOT Map.IN_xCloseFeedback) THEN
+            #xSensorFault := TRUE;
+        END_IF;
         
         // 2. 超时报警处理
         // 开阀超时，使用TON定时器
         #TON_Open(IN := Map.OUT_xActualOut AND NOT Variable.OUT_xOpenOK,
                   PT := Retain.IN_tOpenTime);
-        #xOpenTimeout := #TON_Open.Q;
+        IF #TON_Open.Q THEN
+            #xOpenTimeout := TRUE;
+        END_IF;
         
         // 关阀超时，使用TON定时器
         #TON_Close(IN := NOT Map.OUT_xActualOut AND NOT Variable.OUT_xCloseOK,
                    PT := Retain.IN_tCloseTime);
-        #xCloseTimeout := #TON_Close.Q;
-        
-        // 动作时间计算 - 简化逻辑，任何状态都计时
-        #TON_Action(IN := TRUE,
-                    PT := T#24H);
-        #tActionTime := #TON_Action.ET;
+        IF #TON_Close.Q THEN
+            #xCloseTimeout := TRUE;
+        END_IF;
     END_IF;
     
-    // 3. 报警字更新
+    // 动作时间计算 - 简化逻辑，任何状态都计时
+    #TON_Action(IN := TRUE,
+                PT := T#24H);
+    #tActionTime := #TON_Action.ET;
+    
+    // 3. 报警字和报警布尔量更新
     // Bit0: 开阀超时报警
     ALM.OUT_wALM.%X0 := #xOpenTimeout;
+    ALM.OUT_xOpenTimeout := #xOpenTimeout;
     // Bit1: 关阀超时报警
     ALM.OUT_wALM.%X1 := #xCloseTimeout;
+    ALM.OUT_xCloseTimeout := #xCloseTimeout;
     // Bit2: 传感器故障报警
     ALM.OUT_wALM.%X2 := #xSensorFault;
+    ALM.OUT_xSensorFault := #xSensorFault;
     
     // 计数功能，使用开到位上升沿计数
     // 计数功能，使用开到位上升沿计数
