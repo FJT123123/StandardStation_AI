@@ -59,7 +59,12 @@ TITLE = 阀门功能块
 { S7_Optimized_Access := 'TRUE' }
 AUTHOR : 樊江涛
 VERSION : 0.1
-//写每次更新的内容
+   // 版本0.1更新：
+   // 1.报警状态通过结构体布尔量直接输出
+   // 2.状态字改用常量定义并添加数值注释
+   // 3.计数变量移至Retain结构体实现掉电保持
+   // 4.优化SEL指令参数顺序符合西门子规范
+   // 5.使用REGION区域划分代码结构
    VAR_INPUT 
       IN_xSys_EDS : Bool;   // 安全联锁
       IN_xM_A : Bool;   // 自动1/手动0模式切换
