@@ -101,7 +101,7 @@ BEGIN
 	        // 安全联锁处理，最高优先级
 	        IF NOT #IN_xSys_EDS THEN
 	            #Map.OUT_xActualOut := 0;
-	       
+	            
 	        ELSIF #IN_xM_A THEN
 	            // 自动模式
 	            IF #Variable.IN_xAutoCmd AND #HMI.IN_xOpenCondition THEN
