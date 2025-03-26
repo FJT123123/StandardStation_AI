@@ -29,7 +29,6 @@ VERSION : 0.1
       IN_xOpenCondition : Bool := TRUE;   // 开阀运行条件
       IN_xCloseCondition : Bool := TRUE;   // 关阀运行条件
       OUT_uiState : UInt;   // 状态字(0=初始状态,1=已关闭,2=已打开,3=正在打开,4=正在关闭,5=关阀故障,6=开阀故障,7=传感器故障)
-      OUT_udiCount : UDInt;   // 计次
    END_STRUCT;
 
 END_TYPE
@@ -39,6 +38,7 @@ VERSION : 0.1
    STRUCT
       IN_tOpenTime : Time := T#10S;
       IN_tCloseTime : Time := T#10S;
+      INOUT_udiCount : UDInt;   // 计次
    END_STRUCT;
 
 END_TYPE
@@ -55,8 +55,11 @@ VERSION : 0.1
 END_TYPE
 
 FUNCTION_BLOCK "Valve_FB"
+TITLE = 阀门功能块
 { S7_Optimized_Access := 'TRUE' }
+AUTHOR : 樊江涛
 VERSION : 0.1
+//写每次更新的内容
    VAR_INPUT 
       IN_xSys_EDS : Bool;   // 安全联锁
       IN_xM_A : Bool;   // 自动1/手动0模式切换
@@ -211,10 +214,10 @@ BEGIN
 	    REGION 计数功能
 	        // 计数功能，使用开到位上升沿计数
 	        IF #HMI.IN_xCounterReset THEN
-	            #HMI.OUT_udiCount := 0;
+	            #Retain.INOUT_udiCount := 0;
 	        ELSE
 	            IF #Variable.OUT_xOpenOK AND NOT #LastOpenOK THEN
-	                #HMI.OUT_udiCount := #HMI.OUT_udiCount + 1;
+	                #Retain.INOUT_udiCount := #Retain.INOUT_udiCount + 1;
 	            END_IF;
 	        END_IF;
 	        #LastOpenOK := #Variable.OUT_xOpenOK;
