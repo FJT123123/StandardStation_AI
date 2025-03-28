@@ -25,7 +25,6 @@ TYPE "UDT_Valve_HMI"
 VERSION : 0.1
    STRUCT
       IN_xNormOpen : Bool;   // 常开常闭阀选择/常开为1，常闭为0
-      IN_xALMEnable : Bool := TRUE;   // 报警使能
       IN_xManualOpen : Bool;   // 手动开
       IN_xManualClose : Bool;   // 手动关
       IN_xCounterReset : Bool;   // 计数复位
@@ -39,6 +38,7 @@ VERSION : 0.1
    STRUCT
       IN_tOpenTime : Time := T#10S;   // 开阀超时时间
       IN_tCloseTime : Time := T#10S;   // 关阀超时时间
+      IN_xALMEnable : Bool := TRUE;   // 报警使能
       INOUT_udiCount : UDInt;   // 计次
    END_STRUCT;
 
@@ -204,10 +204,10 @@ BEGIN
     
     REGION 开关状态反馈处理
         // 根据报警使能状态选择反馈信号来源
-        #Temp.OUT_xOpenOK := SEL(G := #HMI.IN_xALMEnable,
+        #Temp.OUT_xOpenOK := SEL(G := #Keep.IN_xALMEnable,
                                      IN0 := (#Map.OUT_xActualOut <> #HMI.IN_xNormOpen),
                                      IN1 := #Map.IN_xOpenFeedback AND (#Map.OUT_xActualOut <> #HMI.IN_xNormOpen));
-        #Temp.OUT_xCloseOK := SEL(G := #HMI.IN_xALMEnable,
+        #Temp.OUT_xCloseOK := SEL(G := #Keep.IN_xALMEnable,
                                       IN0 := (#Map.OUT_xActualOut = #HMI.IN_xNormOpen),
                                       IN1 := #Map.IN_xCloseFeedback AND (#Map.OUT_xActualOut = #HMI.IN_xNormOpen));
     END_REGION
@@ -221,7 +221,7 @@ BEGIN
             #xCloseTimeout := FALSE;
         END_IF;
         
-        IF #HMI.IN_xALMEnable THEN
+        IF #Keep.IN_xALMEnable THEN
             // 传感器故障检测
             IF (#Map.IN_xOpenFeedback AND #Map.IN_xCloseFeedback) OR
                 (NOT #Map.IN_xOpenFeedback AND NOT #Map.IN_xCloseFeedback) THEN
@@ -282,16 +282,16 @@ BEGIN
     
     REGION 状态字更新
         // 报警使能无效时清除报警状态
-        IF NOT #HMI.IN_xALMEnable THEN
+        IF NOT #Keep.IN_xALMEnable THEN
             #xSensorFault := FALSE;
             #xOpenTimeout := FALSE;
             #xCloseTimeout := FALSE;
         END_IF;
         
         // 状态字处理逻辑，按优先级排序
-        IF #xSensorFault AND #HMI.IN_xALMEnable THEN
+        IF #xSensorFault AND #Keep.IN_xALMEnable THEN
             #HMI.OUT_uiState := #VALVE_STATE_SENSOR_FAULT;
-        ELSIF (#xOpenTimeout OR #xCloseTimeout) AND #HMI.IN_xALMEnable THEN
+        ELSIF (#xOpenTimeout OR #xCloseTimeout) AND #Keep.IN_xALMEnable THEN
             IF #xOpenTimeout THEN
                 #HMI.OUT_uiState := #VALVE_STATE_OPEN_FAULT;
             ELSE
