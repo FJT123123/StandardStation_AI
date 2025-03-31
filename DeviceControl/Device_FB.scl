@@ -1,86 +1,33 @@
-﻿
-
-TYPE "UDT_Device_Map"
-VERSION : 0.1
-   STRUCT
-      IN_xStartFeedback : Bool;   //   设备启动反馈
-      IN_xAlarmFeedback : Bool;   //   设备报警反馈
-      OUT_xActualOut : Bool;   //   设备控制
-      OUT_xStartDevice : Bool;   //   启动对方设备信号（上升沿有效，1秒后自动复位）
-      OUT_xStopDevice : Bool;   //   停止对方设备信号（下降沿有效，1秒后自动复位）
-   END_STRUCT;
-END_TYPE
-
-TYPE "UDT_Device_Temp"
-VERSION : 0.1
-   STRUCT
-      IN_xAutoCmd : Bool;   //   自动模式启动设备
-      IN_xManualCmd : Bool;   //   手动模式下的设备控制辅助命令/1为启动，0为停止
-      IN_xStartCondition : Bool := TRUE;   //   启动设备运行条件
-      OUT_xStartOK : Bool;   //   启动到位
-      OUT_xStopOK : Bool;   //   停止到位
-   END_STRUCT;
-END_TYPE
-
-TYPE "UDT_Device_HMI"
-VERSION : 0.1
-   STRUCT
-      IN_xManualStart : Bool;   //   手动启动
-      IN_xManualStop : Bool;   //   手动停止
-      OUT_uiState : UInt;   //   状态字(0=初始状态,1=已停止,2=已启动,3=正在启动,4=正在停止,5=停止故障,6=启动故障,7=设备报警)
-   END_STRUCT;
-END_TYPE
-
-TYPE "UDT_Device_Keep"
-VERSION : 0.1
-   STRUCT
-      IN_tStartTime : Time := T#10S;   //   启动设备超时时间
-      IN_tStopTime : Time := T#10S;   //   停止设备超时时间
-      IN_xAlarmEnable : Bool := TRUE;   //   报警使能
-      OUT_tCurrentRun : UDInt;   //   本次运行时间(分钟)
-   END_STRUCT;
-END_TYPE
-
-TYPE "UDT_Device_ALM"
-VERSION : 0.1
-   STRUCT
-      OUT_wALM : Word;   //   报警字 (Bit0=启动设备超时报警, Bit1=停止设备超时报警, Bit2=设备报警)
-      OUT_xStartTimeout : Bool;   //   启动设备超时
-      OUT_xStopTimeout : Bool;   //   停止设备超时
-      OUT_xDeviceAlarm : Bool;   //   设备报警
-   END_STRUCT;
-END_TYPE
-
-FUNCTION_BLOCK "Device_FB"
+﻿FUNCTION_BLOCK "Device_FB"
    TITLE = 设备控制功能块
-   { S7_Optimized_Access := 'TRUE' }
-   VERSION : 0.1
-  (*
-功能说明：
-1. 本功能块用于控制设备的启停，支持自动/手动模式切换
-2. 具备启动/停止超时检测、设备报警检测功能
-3. 支持运行时间统计
-4. 提供启动/停止对方设备的脉冲信号
-
-使用说明：
-1. 输入参数：
-   - IN_xSys_EDS：安全联锁信号，为0时强制停止设备
-   - IN_xM_A：模式选择，1为自动模式，0为手动模式
-   - IN_xREST：复位信号，用于清除报警
-
-2. 设备控制：
-   - 自动模式：通过IN_xAutoCmd控制设备
-   - 手动模式：可通过HMI界面按钮或IN_xManualCmd控制
-
-3. 报警功能：
-   - 启动超时：设备启动后，在设定时间内未收到启动反馈
-   - 停止超时：设备停止后，在设定时间内未停止到位
-   - 设备报警：来自设备的报警信号
-
-4. 运行时间：
-   - 统计设备每次启动后的运行时间（分钟）
-*) 
-   VAR_INPUT 
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+//
+//功能说明：
+//1. 本功能块用于控制设备的启停，支持自动/手动模式切换
+//2. 具备启动/停止超时检测、设备报警检测功能
+//3. 支持运行时间统计
+//4. 提供启动/停止对方设备的脉冲信号
+//
+//使用说明：
+//1. 输入参数：
+//   - IN_xSys_EDS：安全联锁信号，为0时强制停止设备
+//   - IN_xM_A：模式选择，1为自动模式，0为手动模式
+//   - IN_xREST：复位信号，用于清除报警
+//
+//2. 设备控制：
+//   - 自动模式：通过IN_xAutoCmd控制设备
+//   - 手动模式：可通过HMI界面按钮或IN_xManualCmd控制
+//
+//3. 报警功能：
+//   - 启动超时：设备启动后，在设定时间内未收到启动反馈
+//   - 停止超时：设备停止后，在设定时间内未停止到位
+//   - 设备报警：来自设备的报警信号
+//
+//4. 运行时间：
+//   - 统计设备每次启动后的运行时间（分钟）
+//
+VAR_INPUT 
       IN_xSys_EDS : Bool;   // 安全联锁
       IN_xM_A : Bool;   // 自动1/手动0模式切换
       IN_xREST : Bool;   // 复位信号
@@ -125,155 +72,160 @@ FUNCTION_BLOCK "Device_FB"
       DEVICE_STATE_DEVICE_FAULT : UInt := 7;   // 设备报警
    END_VAR
 
+
 BEGIN
-    REGION 安全联锁处理/自动/手动模式切换
-        // 安全联锁处理，最高优先级
-        // 增加报警联锁：任意报警发生时都需要关闭设备
-        IF NOT #IN_xSys_EDS OR #ALM.OUT_wALM <> 0 THEN
-            #Map.OUT_xActualOut := 0;
-            
-        ELSIF #IN_xM_A THEN
-            // 自动模式
-            IF #Temp.IN_xAutoCmd AND #Temp.IN_xStartCondition THEN
-                #Map.OUT_xActualOut := 1;
-            ELSE
-                #Map.OUT_xActualOut := 0;
-            END_IF;
-        ELSIF #xLastM_A AND NOT #IN_xM_A THEN
-            // 自动切手动时，根据手动命令状态决定设备状态
-            IF #Temp.IN_xManualCmd AND #Temp.IN_xStartCondition THEN
-                #Map.OUT_xActualOut := 1;
-                #HMI.IN_xManualStop := FALSE;
-            ELSE
-                #Map.OUT_xActualOut := 0;
-                #HMI.IN_xManualStart := FALSE;
-            END_IF;
-        ELSE
-            // 手动模式，使用RS触发器实现互锁
-            IF #HMI.IN_xManualStart AND NOT #xLastManualStart AND #Temp.IN_xStartCondition THEN
-                #Map.OUT_xActualOut := 1;
-                #HMI.IN_xManualStop := FALSE;
-            ELSIF #HMI.IN_xManualStop AND NOT #xLastManualStop THEN
-                #Map.OUT_xActualOut := 0;
-                #HMI.IN_xManualStart := FALSE;
-            // 处理手动命令控制
-            ELSIF #Temp.IN_xManualCmd AND NOT #xLastManualCmd AND #Temp.IN_xStartCondition THEN
-                #Map.OUT_xActualOut := 1;
-                #HMI.IN_xManualStop := FALSE;
-            ELSIF NOT #Temp.IN_xManualCmd AND #xLastManualCmd THEN
-                #Map.OUT_xActualOut := 0;
-                #HMI.IN_xManualStart := FALSE;
-            END_IF;
-            
-            // 更新边沿检测状态
-            #xLastManualStart := #HMI.IN_xManualStart;
-            #xLastManualStop := #HMI.IN_xManualStop;
-            #xLastManualCmd := #Temp.IN_xManualCmd;
-        END_IF;
-        #xLastM_A := #IN_xM_A;
-        
-        // 处理对方设备的启动和停止信号
-        // 检测设备控制状态变化，生成启动和停止脉冲信号
-        IF #Map.OUT_xActualOut AND NOT #xLastActualOut THEN
-            // 设备从停止到启动，发出启动信号
-            #Map.OUT_xStartDevice := 1;
-            #TON_StartPulse(IN := TRUE,
-                           PT := T#1S);
-        ELSIF NOT #Map.OUT_xActualOut AND #xLastActualOut THEN
-            // 设备从启动到停止，发出停止信号
-            #Map.OUT_xStopDevice := 1;
-            #TON_StopPulse(IN := TRUE,
-                          PT := T#1S);
-        END_IF;
-        
-        // 1秒后自动复位启动和停止信号
-        IF #TON_StartPulse.Q THEN
-            #Map.OUT_xStartDevice := 0;
-            #TON_StartPulse.IN := FALSE;
-        END_IF;
-        
-        IF #TON_StopPulse.Q THEN
-            #Map.OUT_xStopDevice := 0;
-            #TON_StopPulse.IN := FALSE;
-        END_IF;
-        
-        // 更新上一周期设备控制状态
-        #xLastActualOut := #Map.OUT_xActualOut;
-    END_REGION
-    
-    REGION 启停状态反馈处理
-        #Temp.OUT_xStartOK := #Map.IN_xStartFeedback AND #Map.OUT_xActualOut;
-        #Temp.OUT_xStopOK := NOT #Map.OUT_xActualOut AND NOT #Map.IN_xStartFeedback;
-    END_REGION
-    
-    REGION 报警处理
-        // 复位处理
-        IF #IN_xREST THEN
-            #xStartTimeout := FALSE;
-            #xStopTimeout := FALSE;
-            // 复位时也清除设备报警
-            #ALM.OUT_xDeviceAlarm := FALSE;
-        END_IF;
-        
-        // 设备报警直接处理
-        IF #Map.IN_xAlarmFeedback AND #Keep.IN_xAlarmEnable THEN
-            #ALM.OUT_xDeviceAlarm := TRUE;
-        ELSE
-            #ALM.OUT_xDeviceAlarm := FALSE;
-        END_IF;
-        
-        // 启动超时检测
-        #TON_Start(IN := #Map.OUT_xActualOut AND NOT #Temp.OUT_xStartOK,
-                   PT := #Keep.IN_tStartTime);
-        IF #TON_Start.Q AND #Keep.IN_xAlarmEnable THEN
-            #xStartTimeout := TRUE;
-        END_IF;
-        
-        // 停止超时检测
-        #TON_Stop(IN := NOT #Map.OUT_xActualOut AND NOT #Temp.OUT_xStopOK,
-                  PT := #Keep.IN_tStopTime);
-        IF #TON_Stop.Q AND #Keep.IN_xAlarmEnable THEN
-            #xStopTimeout := TRUE;
-        END_IF;
-    END_REGION
-    
-    REGION 运行时间计算
-        #TON_Runtime(IN := #Temp.OUT_xStartOK,
-                     PT := T#24H);
-        IF #Temp.OUT_xStartOK THEN
-            #Keep.OUT_tCurrentRun := DINT_TO_UDINT(TIME_TO_DINT(#TON_Runtime.ET) / 60000); // 转换为分钟
-        ELSE
-            #TON_Runtime.IN := FALSE;
-            #Keep.OUT_tCurrentRun := 0;
-        END_IF;
-    END_REGION
-    
-    REGION 报警状态更新
-        // 报警字和报警布尔量更新
-        #ALM.OUT_wALM.%X0 := #xStartTimeout;
-        #ALM.OUT_xStartTimeout := #xStartTimeout;
-        #ALM.OUT_wALM.%X1 := #xStopTimeout;
-        #ALM.OUT_xStopTimeout := #xStopTimeout;
-        #ALM.OUT_wALM.%X2 := #ALM.OUT_xDeviceAlarm;
-    END_REGION
-    
-    REGION 状态字更新
-        IF #ALM.OUT_xDeviceAlarm THEN
-            #HMI.OUT_uiState := #DEVICE_STATE_DEVICE_FAULT;
-        ELSIF #xStartTimeout THEN
-            #HMI.OUT_uiState := #DEVICE_STATE_START_FAULT;
-        ELSIF #xStopTimeout THEN
-            #HMI.OUT_uiState := #DEVICE_STATE_STOP_FAULT;
-        ELSIF #Temp.OUT_xStartOK THEN
-            #HMI.OUT_uiState := #DEVICE_STATE_STARTED;
-        ELSIF #Temp.OUT_xStopOK THEN
-            #HMI.OUT_uiState := #DEVICE_STATE_STOPPED;
-        ELSIF #Map.OUT_xActualOut THEN
-            #HMI.OUT_uiState := #DEVICE_STATE_STARTING;
-        ELSIF NOT #Map.OUT_xActualOut THEN
-            #HMI.OUT_uiState := #DEVICE_STATE_STOPPING;
-        ELSE
-            #HMI.OUT_uiState := #DEVICE_STATE_INIT;
-        END_IF;
-    END_REGION
+	    REGION 安全联锁处理/自动/手动模式切换
+	        // 安全联锁处理，最高优先级
+	        // 增加报警联锁：任意报警发生时都需要关闭设备
+	        IF NOT #IN_xSys_EDS OR #ALM.OUT_wALM <> 0 THEN
+	            #Map.OUT_xActualOut := 0;
+	            
+	        ELSIF #IN_xM_A THEN
+	            // 自动模式
+	            IF #Temp.IN_xAutoCmd AND #Temp.IN_xStartCondition THEN
+	                #Map.OUT_xActualOut := 1;
+	            ELSE
+	                #Map.OUT_xActualOut := 0;
+	            END_IF;
+	        ELSIF #xLastM_A AND NOT #IN_xM_A THEN
+	            // 自动切手动时，根据手动命令状态决定设备状态
+	            IF #Temp.IN_xManualCmd AND #Temp.IN_xStartCondition THEN
+	                #Map.OUT_xActualOut := 1;
+	                #HMI.IN_xManualStop := FALSE;
+	            ELSE
+	                #Map.OUT_xActualOut := 0;
+	                #HMI.IN_xManualStart := FALSE;
+	            END_IF;
+	        ELSE
+	            // 手动模式，使用RS触发器实现互锁
+	            IF #HMI.IN_xManualStart AND NOT #xLastManualStart AND #Temp.IN_xStartCondition THEN
+	                #Map.OUT_xActualOut := 1;
+	                #HMI.IN_xManualStop := FALSE;
+	            ELSIF #HMI.IN_xManualStop AND NOT #xLastManualStop THEN
+	                #Map.OUT_xActualOut := 0;
+	                #HMI.IN_xManualStart := FALSE;
+	                // 处理手动命令控制
+	            ELSIF #Temp.IN_xManualCmd AND NOT #xLastManualCmd AND #Temp.IN_xStartCondition THEN
+	                #Map.OUT_xActualOut := 1;
+	                #HMI.IN_xManualStop := FALSE;
+	            ELSIF NOT #Temp.IN_xManualCmd AND #xLastManualCmd THEN
+	                #Map.OUT_xActualOut := 0;
+	                #HMI.IN_xManualStart := FALSE;
+	            END_IF;
+	            
+	            // 更新边沿检测状态
+	            #xLastManualStart := #HMI.IN_xManualStart;
+	            #xLastManualStop := #HMI.IN_xManualStop;
+	            #xLastManualCmd := #Temp.IN_xManualCmd;
+	        END_IF;
+	        #xLastM_A := #IN_xM_A;
+	        
+	        // 处理对方设备的启动和停止信号
+	        // 检测设备控制状态变化，生成启动和停止脉冲信号
+	        IF #Map.OUT_xActualOut AND NOT #xLastActualOut THEN
+	            // 设备从停止到启动，发出启动信号
+	            #Map.OUT_xStartDevice := 1;
+	            #TON_StartPulse(IN := TRUE,
+	                            PT := T#1S);
+	        ELSIF NOT #Map.OUT_xActualOut AND #xLastActualOut THEN
+	            // 设备从启动到停止，发出停止信号
+	            #Map.OUT_xStopDevice := 1;
+	            #TON_StopPulse(IN := TRUE,
+	                           PT := T#1S);
+	        END_IF;
+	        
+	        // 1秒后自动复位启动和停止信号
+	        IF #TON_StartPulse.Q THEN
+	            #Map.OUT_xStartDevice := 0;
+	            #TON_StartPulse.IN := FALSE;
+	        END_IF;
+	        
+	        IF #TON_StopPulse.Q THEN
+	            #Map.OUT_xStopDevice := 0;
+	            #TON_StopPulse.IN := FALSE;
+	        END_IF;
+	        
+	        // 更新上一周期设备控制状态
+	        #xLastActualOut := #Map.OUT_xActualOut;
+	    END_REGION
+	    
+	    REGION 启停状态反馈处理
+	        #Temp.OUT_xStartOK := #Map.IN_xStartFeedback AND #Map.OUT_xActualOut;
+	        #Temp.OUT_xStopOK := NOT #Map.OUT_xActualOut AND NOT #Map.IN_xStartFeedback;
+	    END_REGION
+	    
+	    REGION 报警处理
+	        // 复位处理
+	        IF #IN_xREST THEN
+	            #xStartTimeout := FALSE;
+	            #xStopTimeout := FALSE;
+	            // 复位时也清除设备报警
+	            #ALM.OUT_xDeviceAlarm := FALSE;
+	        END_IF;
+	        
+	        // 设备报警直接处理
+	        IF #Map.IN_xAlarmFeedback AND #Keep.IN_xAlarmEnable THEN
+	            #ALM.OUT_xDeviceAlarm := TRUE;
+	        ELSE
+	            #ALM.OUT_xDeviceAlarm := FALSE;
+	        END_IF;
+	        
+	        // 启动超时检测
+	        #TON_Start(IN := #Map.OUT_xActualOut AND NOT #Temp.OUT_xStartOK,
+	                   PT := #Keep.IN_tStartTime);
+	        IF #TON_Start.Q AND #Keep.IN_xAlarmEnable THEN
+	            #xStartTimeout := TRUE;
+	        END_IF;
+	        
+	        // 停止超时检测
+	        #TON_Stop(IN := NOT #Map.OUT_xActualOut AND NOT #Temp.OUT_xStopOK,
+	                  PT := #Keep.IN_tStopTime);
+	        IF #TON_Stop.Q AND #Keep.IN_xAlarmEnable THEN
+	            #xStopTimeout := TRUE;
+	        END_IF;
+	    END_REGION
+	    
+	    REGION 运行时间计算
+	        #TON_Runtime(IN := #Temp.OUT_xStartOK,
+	                     PT := T#24H);
+	        IF #Temp.OUT_xStartOK THEN
+	            #Keep.OUT_tCurrentRun := DINT_TO_UDINT(TIME_TO_DINT(#TON_Runtime.ET) / 60000); // 转换为分钟
+	        ELSE
+	            #TON_Runtime.IN := FALSE;
+	            #Keep.OUT_tCurrentRun := 0;
+	        END_IF;
+	    END_REGION
+	    
+	    REGION 报警状态更新
+	        // 报警字和报警布尔量更新
+	        // 先将报警字复位为0
+	        #ALM.OUT_wALM := 0;
+	        
+	        #ALM.OUT_wALM.%X0 := #xStartTimeout;
+	        #ALM.OUT_xStartTimeout := #xStartTimeout;
+	        #ALM.OUT_wALM.%X1 := #xStopTimeout;
+	        #ALM.OUT_xStopTimeout := #xStopTimeout;
+	        #ALM.OUT_wALM.%X2 := #ALM.OUT_xDeviceAlarm;
+	    END_REGION
+	    
+	    REGION 状态字更新
+	        IF #ALM.OUT_xDeviceAlarm THEN
+	            #HMI.OUT_uiState := #DEVICE_STATE_DEVICE_FAULT;
+	        ELSIF #xStartTimeout THEN
+	            #HMI.OUT_uiState := #DEVICE_STATE_START_FAULT;
+	        ELSIF #xStopTimeout THEN
+	            #HMI.OUT_uiState := #DEVICE_STATE_STOP_FAULT;
+	        ELSIF #Temp.OUT_xStartOK THEN
+	            #HMI.OUT_uiState := #DEVICE_STATE_STARTED;
+	        ELSIF #Temp.OUT_xStopOK THEN
+	            #HMI.OUT_uiState := #DEVICE_STATE_STOPPED;
+	        ELSIF #Map.OUT_xActualOut THEN
+	            #HMI.OUT_uiState := #DEVICE_STATE_STARTING;
+	        ELSIF NOT #Map.OUT_xActualOut THEN
+	            #HMI.OUT_uiState := #DEVICE_STATE_STOPPING;
+	        ELSE
+	            #HMI.OUT_uiState := #DEVICE_STATE_INIT;
+	        END_IF;
+	    END_REGION
 END_FUNCTION_BLOCK
+

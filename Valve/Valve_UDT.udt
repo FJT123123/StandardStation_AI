@@ -1,0 +1,57 @@
+﻿TYPE "UDT_Valve_ALM"
+VERSION : 0.1
+   STRUCT
+      OUT_wALM : Word;   //  报警字 (Bit0=开阀超时报警, Bit1=关阀超时报警, Bit2=传感器故障报警)
+      OUT_xSensorFault : Bool;   //  传感器故障
+      OUT_xOpenTimeout : Bool;   //  开阀超时
+      OUT_xCloseTimeout : Bool;   //  关阀超时
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "UDT_Valve_HMI"
+VERSION : 0.1
+   STRUCT
+      IN_xNormOpen : Bool;   //  常开常闭阀选择/常开为1，常闭为0
+      IN_xManualOpen : Bool;   //  手动开
+      IN_xManualClose : Bool;   //  手动关
+      IN_xCounterReset : Bool;   //  计数复位
+      OUT_uiState : UInt;   //  状态字(0=初始状态,1=已关闭,2=已打开,3=正在打开,4=正在关闭,5=关阀故障,6=开阀故障,7=传感器故障)
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "UDT_Valve_Keep"
+VERSION : 0.1
+   STRUCT
+      IN_tOpenTime : Time := T#10S;   //  开阀超时时间
+      IN_tCloseTime : Time := T#10S;   //  关阀超时时间
+      IN_xALMEnable : Bool := TRUE;   //  报警使能
+      INOUT_udiCount : UDInt;   //  计次
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "UDT_Valve_Map"
+VERSION : 0.1
+   STRUCT
+      IN_xOpenFeedback : Bool;   //  传感器开
+      IN_xCloseFeedback : Bool;   //  传感器关
+      OUT_xActualOut : Bool;   //  阀门控制
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "UDT_Valve_Temp"
+VERSION : 0.1
+   STRUCT
+      IN_xAutoCmd : Bool;   //  自动模式开阀
+      IN_xManualCmd : Bool;   //  手动模式下的阀门控制辅助命令/1为开，0为关
+      IN_xOpenCondition : Bool := TRUE;   //  开阀运行条件
+      IN_xCloseCondition : Bool := TRUE;   //  关阀运行条件
+      OUT_xOpenOK : Bool;   //  开到位
+      OUT_xCloseOK : Bool;   //  关到位
+   END_STRUCT;
+
+END_TYPE
+

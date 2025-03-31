@@ -1,0 +1,22 @@
+﻿TYPE "UDT_Modbus_ALM"
+VERSION : 0.1
+   STRUCT
+      ModbusStatus : Word;   //  Modbus通信状态/错误码
+      ConversionError : Word;   //  数据转换错误码
+      DeserializeStatus : Word;   //  反序列化状态/错误码
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "UDT_Modbus_Config"
+VERSION : 0.1
+   STRUCT
+      mbAddr : UInt;   //  Modbus从站地址
+      mode : USInt;   //  通信模式(0=读,1=写)
+      dataAddr : UDInt;   //  数据地址
+      dataLen : UInt;   //  数据长度
+      instrument : DB_ANY;   //  数据块指针
+   END_STRUCT;
+
+END_TYPE
+
