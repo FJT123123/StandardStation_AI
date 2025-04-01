@@ -1,0 +1,20 @@
+TYPE "UDT_EnergyData"
+VERSION : 0.1
+   STRUCT
+      rCurrentValue : Real;   // 当前能耗值
+      rHourlyValue : Real;   // 小时累计值
+      rDailyValue : Real;   // 日累计值
+      rMonthlyValue : Real;   // 月累计值
+      rYearlyValue : Real;   // 年累计值 历史数据
+      aHourlyHistory : Array[0..23] of Real;   // 24小时历史数据
+      aDailyHistory : Array[1..31] of Real;   // 月度每天历史数据
+      aMonthlyHistory : Array[1..12] of Real;   // 年度每月历史数据 时间戳
+      dtLastHourReset {InstructionName := 'DTL'; LibVersion := '1.0'} : DTL;   // 上次小时重置时间
+      dtLastDayReset {InstructionName := 'DTL'; LibVersion := '1.0'} : DTL;   // 上次日重置时间
+      dtLastMonthReset {InstructionName := 'DTL'; LibVersion := '1.0'} : DTL;   // 上次月重置时间 状态信息
+      xDataValid : Bool;   // 数据有效性标志
+      xError : Bool;   // 错误状态
+      wStatus : Word;   // 状态字
+   END_STRUCT;
+
+END_TYPE

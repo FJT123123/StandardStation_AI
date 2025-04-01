@@ -1,0 +1,109 @@
+﻿FUNCTION_BLOCK "EnergyCalculator_FB"
+   { S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+VAR_INPUT 
+      IN_rRawValue : Real := 0.0;   // 原始能耗值
+      IN_rCoefficient : Real := 1.0;   // 能耗转换系数
+      IN_xReset : Bool := FALSE;   // 复位信号
+     
+   END_VAR
+
+   VAR_OUTPUT RETAIN
+      OUT_Data : "UDT_EnergyData";   // 能耗数据输出
+   END_VAR
+   VAR_TEMP
+     dtSystemTime{InstructionName := 'DTL'; LibVersion := '1.0'}: DTL := (YEAR := 0, MONTH := 0, DAY := 0, HOUR := 0, MINUTE := 0, SECOND := 0);
+     INT1 : Int := 0;
+   END_VAR
+   VAR RETAIN
+      xFirstScan : Bool := TRUE;   // 首次扫描标志
+      iLastHour : Int := 0;   // 上一次记录的小时值
+      iLastDay : Int := 0;   // 上一次记录的日期值
+      iLastMonth : Int := 0;   // 上一次记录的月份值
+      rHourAccumulator : Real := 0.0;   // 小时累计器
+      rDayAccumulator : Real := 0.0;   // 日累计器
+      rMonthAccumulator : Real := 0.0;   // 月累计器
+      rLastRawValue : Real := 0.0;   // 上一次原始值
+   END_VAR
+
+
+BEGIN
+	    // 首次扫描初始化
+	    #INT1:= RD_SYS_T( OUT => #dtSystemTime);
+	    IF #xFirstScan THEN
+	        #xFirstScan := FALSE;
+	        #OUT_Data.dtLastHourReset := #dtSystemTime;
+	        #OUT_Data.dtLastDayReset := #dtSystemTime;
+	        #OUT_Data.dtLastMonthReset := #dtSystemTime;
+	        #iLastHour := #dtSystemTime.HOUR;
+	        #iLastDay := #dtSystemTime.DAY;
+	        #iLastMonth := #dtSystemTime.MONTH;
+	        #rLastRawValue := #IN_rRawValue;
+	    END_IF;
+	    
+	    // 复位处理
+	    IF #IN_xReset THEN
+	        #OUT_Data.rCurrentValue := 0.0;
+	        #OUT_Data.rHourlyValue := 0.0;
+	        #OUT_Data.rDailyValue := 0.0;
+	        #OUT_Data.rMonthlyValue := 0.0;
+	        #OUT_Data.rYearlyValue := 0.0;
+	        #rHourAccumulator := 0.0;
+	        #rDayAccumulator := 0.0;
+	        #rMonthAccumulator := 0.0;
+	        RETURN;
+	    END_IF;
+	    
+	    // 计算增量值
+	    #OUT_Data.rCurrentValue := (#IN_rRawValue - #rLastRawValue) * #IN_rCoefficient;
+	    
+	    // 小时累计处理
+	    #rHourAccumulator := #rHourAccumulator + #OUT_Data.rCurrentValue;
+	    // 实时更新小时累计值
+	    #OUT_Data.rHourlyValue := #rHourAccumulator;
+	    IF #dtSystemTime.HOUR <> #iLastHour THEN
+	        // 保存上一小时数据到历史数组
+	        #OUT_Data.aHourlyHistory[#iLastHour] := #rHourAccumulator;
+	        // 重置累计器
+	        #rHourAccumulator := 0.0;
+	        // 更新时间戳
+	        #OUT_Data.dtLastHourReset := #dtSystemTime;
+	        #iLastHour := #dtSystemTime.HOUR;
+	    END_IF;
+	    
+	    // 日累计处理
+	    #rDayAccumulator := #rDayAccumulator + #OUT_Data.rCurrentValue;
+	    // 实时更新日累计值
+	    #OUT_Data.rDailyValue := #rDayAccumulator;
+	    IF #dtSystemTime.DAY <> #iLastDay THEN
+	        // 保存上一天数据到历史数组
+	        #OUT_Data.aDailyHistory[#iLastDay] := #rDayAccumulator;
+	        // 重置累计器
+	        #rDayAccumulator := 0.0;
+	        // 更新时间戳
+	        #OUT_Data.dtLastDayReset := #dtSystemTime;
+	        #iLastDay := #dtSystemTime.DAY;
+	    END_IF;
+	    
+	    // 月累计处理
+	    #rMonthAccumulator := #rMonthAccumulator + #OUT_Data.rCurrentValue;
+	    // 实时更新月累计值
+	    #OUT_Data.rMonthlyValue := #rMonthAccumulator;
+	    
+	    // 更新上一次原始值
+	    #rLastRawValue := #IN_rRawValue;
+	    IF #dtSystemTime.MONTH <> #iLastMonth THEN
+	        // 保存上一月数据到历史数组
+	        #OUT_Data.aMonthlyHistory[#iLastMonth] := #rMonthAccumulator;
+	        // 重置累计器
+	        #rMonthAccumulator := 0.0;
+	        // 更新时间戳
+	        #OUT_Data.dtLastMonthReset := #dtSystemTime;
+	        #iLastMonth := #dtSystemTime.MONTH;
+	    END_IF;
+	    
+	    // 更新状态
+	    #OUT_Data.xDataValid := TRUE;
+	    
+END_FUNCTION_BLOCK
+

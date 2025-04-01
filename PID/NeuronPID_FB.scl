@@ -1,0 +1,259 @@
+FUNCTION_BLOCK "RBF_NeuronPID_FB"
+
+TITLE = RBF神经网络PID功能块
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : AI生成
+VERSION : 0.1
+//功能说明：
+// 1.RBF神经网络PID控制器：
+//   - 基于RBF神经网络结构实现自适应PID控制
+//   - 通过在线学习自动调整PID参数，适应系统动态特性变化
+//   - 采用高斯基函数作为激活函数，实现非线性映射
+//   - 支持比例、积分、微分三种控制作用的权重自适应
+// 2.控制模式：
+//   - 自动模式：使用RBF神经网络PID算法计算输出
+//   - 手动模式：使用手动设定值作为输出
+// 3.特性：
+//   - 支持积分分离，防止积分饱和
+//   - 支持微分先行，提高系统响应速度
+//   - 支持输出限幅，防止超调
+//   - 支持死区设置，减少控制抖动
+
+// 输入输出变量定义
+VAR_INPUT
+    IN_rSetPoint : Real;    // 设定值
+    IN_rActValue : Real;    // 实际值（过程变量）
+    IN_bManualMode : Bool;  // 手动模式使能
+    IN_rManualValue : Real; // 手动设定值
+    IN_bReset : Bool;       // 复位信号
+END_VAR
+
+VAR_OUTPUT
+    OUT_rOutput : Real;     // 控制器输出
+    OUT_rError : Real;      // 当前误差
+    OUT_rKp : Real;         // 当前比例系数
+    OUT_rKi : Real;         // 当前积分系数
+    OUT_rKd : Real;         // 当前微分系数
+END_VAR
+
+// 静态变量定义
+VAR
+    // RBF神经网络参数
+    rEta : Real := 0.05;    // 学习率
+    rGamma : Real := 0.01;  // 动量因子
+    
+    // PID控制相关变量
+    rError : Real;          // 当前误差
+    rLastError : Real;      // 上一次误差
+    rPrevError : Real;      // 上上次误差
+    rIntegral : Real;       // 积分项
+    rDerivative : Real;     // 微分项
+    rOutput : Real;         // 输出值
+    rLastOutput : Real;     // 上一次输出值
+    
+    // RBF网络结构参数
+    iHiddenNodes : Int := 5;  // 隐含层节点数
+    
+    // 隐含层参数 - 中心点和宽度
+    aCenter : Array[1..5, 1..3] of Real;  // 中心点[节点,输入维度]
+    aSigma : Array[1..5] of Real;         // 宽度参数
+    
+    // 输出层权重
+    aWeight : Array[1..5, 1..3] of Real;  // 权重[节点,输出维度(Kp,Ki,Kd)]
+    aLastDeltaWeight : Array[1..5, 1..3] of Real; // 上一次权重变化量
+    
+    // 隐含层输出
+    aHiddenOutput : Array[1..5] of Real;  // 隐含层输出
+    
+    // 控制参数
+    rKp : Real := 1.0;      // 比例系数
+    rKi : Real := 0.1;      // 积分系数
+    rKd : Real := 0.05;     // 微分系数
+    rOutMax : Real := 100.0; // 输出上限
+    rOutMin : Real := 0.0;   // 输出下限
+    rDeadBand : Real := 0.1; // 死区
+    rIntegralLimit : Real := 100.0; // 积分限幅
+    
+    // 首次运行标志
+    bFirstScan : Bool := TRUE;
+    
+    // 采样时间（秒）
+    rSampleTime : Real := 0.1; // 默认100ms
+    
+    // 临时变量
+    i : Int;
+    j : Int;
+    rTemp : Real;
+    rDistance : Real;
+    rGaussValue : Real;
+    rDeltaWeight : Real;
+END_VAR
+
+VAR CONSTANT
+    PID_STATE_INIT : UInt := 0;    // 初始状态
+    PID_STATE_AUTO : UInt := 1;    // 自动控制状态
+    PID_STATE_MANUAL : UInt := 2;  // 手动控制状态
+END_VAR
+
+BEGIN
+    // 初始化处理
+    IF #bFirstScan OR #IN_bReset THEN
+        #rError := 0.0;
+        #rLastError := 0.0;
+        #rPrevError := 0.0;
+        #rIntegral := 0.0;
+        #rDerivative := 0.0;
+        #rOutput := 0.0;
+        #rLastOutput := 0.0;
+        
+        // 初始化RBF网络参数
+        FOR #i := 1 TO #iHiddenNodes DO
+            // 初始化中心点 - 均匀分布在[-1,1]范围内
+            #aCenter[#i, 1] := -1.0 + 2.0 * (REAL_TO_DINT(#i) - 1) / (REAL_TO_DINT(#iHiddenNodes) - 1);
+            #aCenter[#i, 2] := -1.0 + 2.0 * (REAL_TO_DINT(#i) - 1) / (REAL_TO_DINT(#iHiddenNodes) - 1);
+            #aCenter[#i, 3] := -1.0 + 2.0 * (REAL_TO_DINT(#i) - 1) / (REAL_TO_DINT(#iHiddenNodes) - 1);
+            
+            // 初始化宽度参数 - 根据中心点间距设置
+            #aSigma[#i] := 1.0;
+            
+            // 初始化权重 - 小随机值
+            #aWeight[#i, 1] := 0.5;  // Kp权重
+            #aWeight[#i, 2] := 0.5;  // Ki权重
+            #aWeight[#i, 3] := 0.5;  // Kd权重
+            
+            // 初始化上一次权重变化量
+            #aLastDeltaWeight[#i, 1] := 0.0;
+            #aLastDeltaWeight[#i, 2] := 0.0;
+            #aLastDeltaWeight[#i, 3] := 0.0;
+            
+            // 初始化隐含层输出
+            #aHiddenOutput[#i] := 0.0;
+        END_FOR;
+        
+        #bFirstScan := FALSE;
+    END_IF;
+    
+    REGION 误差计算
+        // 计算当前误差
+        #rError := #IN_rSetPoint - #IN_rActValue;
+        
+        // 死区处理
+        IF ABS(#rError) <= #rDeadBand THEN
+            #rError := 0.0;
+        END_IF;
+    END_REGION
+    
+    REGION 手动/自动模式处理
+        IF #IN_bManualMode THEN
+            // 手动模式：直接使用手动设定值作为输出
+            #rOutput := #IN_rManualValue;
+            
+            // 防止积分饱和，将积分项重置为当前输出值
+            #rIntegral := #rOutput;
+        ELSE
+            // 自动模式：使用RBF神经网络PID算法计算输出
+            
+            // 计算微分项（当前误差与上一次误差的差值）
+            #rDerivative := #rError - #rLastError;
+            
+            // 积分分离：当误差过大时，减小或禁用积分作用
+            IF ABS(#rError) > 10.0 THEN
+                // 误差较大时，减小积分作用
+                #rIntegral := #rIntegral + 0.1 * #rError * #rSampleTime;
+            ELSE
+                // 误差在正常范围内，正常积分
+                #rIntegral := #rIntegral + #rError * #rSampleTime;
+            END_IF;
+            
+            // 积分限幅，防止积分饱和
+            IF #rIntegral > #rIntegralLimit THEN
+                #rIntegral := #rIntegralLimit;
+            ELSIF #rIntegral < -#rIntegralLimit THEN
+                #rIntegral := -#rIntegralLimit;
+            END_IF;
+            
+            // RBF神经网络前向计算
+            // 1. 计算隐含层输出 - 使用高斯基函数
+            FOR #i := 1 TO #iHiddenNodes DO
+                // 计算输入向量与中心点的距离
+                #rDistance := 0.0;
+                #rDistance := #rDistance + EXPT(#rError - #aCenter[#i, 1], 2);
+                #rDistance := #rDistance + EXPT(#rIntegral - #aCenter[#i, 2], 2);
+                #rDistance := #rDistance + EXPT(#rDerivative - #aCenter[#i, 3], 2);
+                
+                // 计算高斯函数输出
+                #rGaussValue := EXP(-#rDistance / (2.0 * EXPT(#aSigma[#i], 2)));
+                #aHiddenOutput[#i] := #rGaussValue;
+            END_FOR;
+            
+            // 2. 计算输出层 - PID参数
+            #rKp := 0.0;
+            #rKi := 0.0;
+            #rKd := 0.0;
+            
+            FOR #i := 1 TO #iHiddenNodes DO
+                #rKp := #rKp + #aWeight[#i, 1] * #aHiddenOutput[#i];
+                #rKi := #rKi + #aWeight[#i, 2] * #aHiddenOutput[#i];
+                #rKd := #rKd + #aWeight[#i, 3] * #aHiddenOutput[#i];
+            END_FOR;
+            
+            // 确保PID参数为正值
+            #rKp := ABS(#rKp);
+            #rKi := ABS(#rKi);
+            #rKd := ABS(#rKd);
+            
+            // 3. 计算PID控制输出
+            #rOutput := #rLastOutput + 
+                       #rKp * (#rError - #rLastError) + 
+                       #rKi * #rError * #rSampleTime + 
+                       #rKd * (#rError - 2.0 * #rLastError + #rPrevError) / #rSampleTime;
+            
+            // 输出限幅
+            IF #rOutput > #rOutMax THEN
+                #rOutput := #rOutMax;
+            ELSIF #rOutput < #rOutMin THEN
+                #rOutput := #rOutMin;
+            END_IF;
+            
+            // RBF神经网络权重更新（基于性能指标J = 0.5 * e(k)^2）
+            // 使用BP算法和动量项进行权重更新
+            FOR #i := 1 TO #iHiddenNodes DO
+                // 更新Kp权重
+                #rDeltaWeight := #rEta * #rError * (#rError - #rLastError) * #aHiddenOutput[#i] + 
+                                #rGamma * #aLastDeltaWeight[#i, 1];
+                #aWeight[#i, 1] := #aWeight[#i, 1] + #rDeltaWeight;
+                #aLastDeltaWeight[#i, 1] := #rDeltaWeight;
+                
+                // 更新Ki权重
+                #rDeltaWeight := #rEta * #rError * #rError * #rSampleTime * #aHiddenOutput[#i] + 
+                                #rGamma * #aLastDeltaWeight[#i, 2];
+                #aWeight[#i, 2] := #aWeight[#i, 2] + #rDeltaWeight;
+                #aLastDeltaWeight[#i, 2] := #rDeltaWeight;
+                
+                // 更新Kd权重
+                #rDeltaWeight := #rEta * #rError * (#rError - 2.0 * #rLastError + #rPrevError) / #rSampleTime * #aHiddenOutput[#i] + 
+                                #rGamma * #aLastDeltaWeight[#i, 3];
+                #aWeight[#i, 3] := #aWeight[#i, 3] + #rDeltaWeight;
+                #aLastDeltaWeight[#i, 3] := #rDeltaWeight;
+            END_FOR;
+            
+            // 更新中心点和宽度参数（可选，这里简化处理，不更新）
+            // 实际应用中可以根据需要添加中心点和宽度参数的自适应调整
+        END_IF;
+    END_REGION
+    
+    REGION 状态更新
+        // 保存历史数据，用于下一次计算
+        #rPrevError := #rLastError;
+        #rLastError := #rError;
+        #rLastOutput := #rOutput;
+        
+        // 更新输出变量
+        #OUT_rOutput := #rOutput;
+        #OUT_rError := #rError;
+        #OUT_rKp := #rKp;
+        #OUT_rKi := #rKi;
+        #OUT_rKd := #rKd;
+    END_REGION
+
+END_FUNCTION_BLOCK

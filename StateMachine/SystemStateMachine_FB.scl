@@ -1,0 +1,205 @@
+﻿FUNCTION_BLOCK "SystemStateMachine_FB"
+   { S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+VAR_INPUT 
+      AutoMode : Bool;      // TRUE=自动模式，FALSE=手动模式
+      AutoCmd : Bool;       // 自动模式下的命令(1=启动,0=停止)
+      ManualStart : Bool;   // 手动启动按钮
+      ManualStop : Bool;    // 手动停止按钮
+      Reset : Bool;         // 故障复位
+      EmergencyStop : Bool; // 紧急停止
+      MaintenanceMode : Bool; // 维护模式
+      SystemFault : Bool;   // 系统故障信号
+      StartTime : Time := T#5S;    // 启动超时时间
+      StopTime : Time := T#5S;     // 停止超时时间
+      WarningSignal : Bool;  // 预警信号输入
+   END_VAR
+
+   VAR_OUTPUT 
+      Running : Bool := FALSE;       // 系统运行中
+      Starting : Bool := FALSE;      // 系统启动中
+      Stopping : Bool := FALSE;      // 系统停止中
+      Fault : Bool := FALSE;         // 系统故障
+      SafetyInterlock : Bool := TRUE;  // 安全联锁信号
+      MaintenanceActive : Bool := FALSE;    // 维护模式激活
+      Warning : Bool := FALSE;       // 预警状态
+      SystemState : Int := 0;    // 系统状态
+      FaultCode : Int := 0;      // 故障代码
+      RunTime : Time := T#0S;       // 运行时间
+      StartCount : DInt := 0;    // 启动次数
+   END_VAR
+
+   VAR 
+      StartTimer{InstructionName := 'IEC_TIMER'; LibVersion := '1.0'}  : TON_TIME;   // 启动延时定时器
+      StopTimer{InstructionName := 'IEC_TIMER'; LibVersion := '1.0'}  : TON_TIME;    // 停止延时定时器
+      RunTimer{InstructionName := 'IEC_TIMER'; LibVersion := '1.0'}  : TON_TIME;     // 运行时间定时器
+      
+      // 边沿检测变量
+      xLastManualStart : Bool;   // 手动启动按钮上升沿
+      xLastManualStop : Bool;    // 手动停止按钮上升沿
+      xLastAutoCmd : Bool;       // 自动命令边沿
+      xLastM_A : Bool;           // 自动/手动模式切换边沿
+   END_VAR
+
+   // 状态常量定义
+   VAR CONSTANT
+      SYS_STATE_INIT : Int := 0;          // 初始状态
+      SYS_STATE_RUNNING : Int := 1;        // 运行状态
+      SYS_STATE_STOPPED : Int := 2;        // 停止状态
+      SYS_STATE_FAULT : Int := 3;          // 故障状态
+      SYS_STATE_MAINTENANCE : Int := 4;    // 维护状态
+      SYS_STATE_EMERGENCY : Int := 5;      // 紧急停止状态
+   END_VAR
+
+
+BEGIN
+	    REGION 安全联锁和模式切换处理
+	        // 紧急停止处理，最高优先级
+	        IF #EmergencyStop THEN
+	            #SafetyInterlock := FALSE;
+	            #SystemState := #SYS_STATE_EMERGENCY;
+	            #Running := FALSE;
+	            #Starting := FALSE;
+	            #Stopping := FALSE;
+	          
+	            RETURN;
+	        END_IF;
+	        
+	        // 维护模式处理
+	        IF #MaintenanceMode THEN
+	            #MaintenanceActive := TRUE;
+	            #SystemState := #SYS_STATE_MAINTENANCE;
+	            #Running := FALSE;
+	            #Starting := FALSE;
+	            #Stopping := FALSE;
+	            RETURN;
+	        END_IF;
+	        
+	        // 故障处理
+	        IF #SystemFault OR #FaultCode <> 0 THEN
+	            IF NOT #Fault THEN
+	                #Fault := TRUE;
+	                #SystemState := #SYS_STATE_FAULT;
+	                #Running := FALSE;
+	                #Starting := FALSE;
+	                #Stopping := FALSE;
+	            END_IF;
+	        END_IF;
+	        
+	        // 预警处理
+	        #Warning := #WarningSignal;
+	        
+	        // 故障复位处理
+	        IF #Reset THEN
+	            #Fault := FALSE;
+	            #FaultCode := 0;
+	            #SafetyInterlock := TRUE;
+	            #MaintenanceActive := FALSE;
+	            #SystemState := #SYS_STATE_INIT;
+	        END_IF;
+	    END_REGION
+	    
+	    REGION 状态机处理
+	        CASE #SystemState OF
+	            #SYS_STATE_INIT:  // 初始状态
+	                #Running := FALSE;
+	                #Starting := FALSE;
+	                #Stopping := FALSE;
+	                
+	                IF NOT #Fault THEN
+	                    // 自动模式下检测自动命令上升沿
+	                    IF #AutoMode AND #AutoCmd AND NOT #xLastAutoCmd THEN
+	                        #StartCount := #StartCount + 1;
+	                        #SystemState := #SYS_STATE_RUNNING;
+	                        // 手动模式下检测启动按钮上升沿
+	                    ELSIF NOT #AutoMode AND #ManualStart AND NOT #xLastManualStart THEN
+	                        #StartCount := #StartCount + 1;
+	                        #SystemState := #SYS_STATE_RUNNING;
+	                    END_IF;
+	                END_IF;
+	                
+	            #SYS_STATE_RUNNING:  // 运行状态
+	                #Running := TRUE;
+	                #Starting := FALSE;
+	                #Stopping := FALSE;
+	                
+	                // 运行时间累计
+	                #RunTimer(IN := TRUE,
+	                          PT := T#24H);
+	                IF #RunTimer.Q THEN
+	                    #RunTimer.IN := FALSE;
+	                    #RunTime := #RunTime + T#24H;
+	                    #RunTimer.IN := TRUE;
+	                END_IF;
+	                
+	                // 自动模式下检测自动命令下降沿
+	                IF #AutoMode AND NOT #AutoCmd AND #xLastAutoCmd THEN
+	                    #SystemState := #SYS_STATE_STOPPED;
+	                    // 手动模式下检测停止按钮上升沿
+	                ELSIF NOT #AutoMode AND #ManualStop AND NOT #xLastManualStop THEN
+	                    #SystemState := #SYS_STATE_STOPPED;
+	                END_IF;
+	                
+	            #SYS_STATE_STOPPED:  // 停止状态
+	                #Running := FALSE;
+	                #Starting := FALSE;
+	                #Stopping := FALSE;
+	                
+	                IF NOT #Fault THEN
+	                    // 自动模式下检测自动命令上升沿
+	                    IF #AutoMode AND #AutoCmd AND NOT #xLastAutoCmd THEN
+	                        #StartCount := #StartCount + 1;
+	                        #SystemState := #SYS_STATE_RUNNING;
+	                        // 手动模式下检测启动按钮上升沿
+	                    ELSIF NOT #AutoMode AND #ManualStart AND NOT #xLastManualStart THEN
+	                        #StartCount := #StartCount + 1;
+	                        #SystemState := #SYS_STATE_RUNNING;
+	                    END_IF;
+	                END_IF;
+	                
+	            #SYS_STATE_FAULT:  // 故障状态
+	                #Running := FALSE;
+	                #Starting := FALSE;
+	                #Stopping := FALSE;
+	                
+	                IF NOT #Fault AND #Reset THEN
+	                    #SystemState := #SYS_STATE_INIT;
+	                END_IF;
+	                
+	            #SYS_STATE_MAINTENANCE:  // 维护状态
+	                #Running := FALSE;
+	                #Starting := FALSE;
+	                #Stopping := FALSE;
+	                
+	                IF NOT #MaintenanceActive THEN
+	                    #SystemState := #SYS_STATE_INIT;
+	                END_IF;
+	                
+	            #SYS_STATE_EMERGENCY:  // 紧急停止状态
+	                #Running := FALSE;
+	                #Starting := FALSE;
+	                #Stopping := FALSE;
+	                
+	                IF NOT #EmergencyStop THEN
+	                    #SystemState := #SYS_STATE_INIT;
+	                END_IF;
+	                
+	        END_CASE;
+	    END_REGION
+	    
+	    REGION 边沿检测状态更新
+	        #xLastManualStart := #ManualStart;
+	        #xLastManualStop := #ManualStop;
+	        #xLastAutoCmd := #AutoCmd;
+	        #xLastM_A := #AutoMode;
+	    END_REGION
+	    
+	    REGION 运行时间统计
+	        // 停止运行时复位运行时间计时器
+	        IF NOT #Running THEN
+	            #RunTimer.IN := FALSE;
+	        END_IF;
+	    END_REGION
+	    
+END_FUNCTION_BLOCK
+

@@ -1,0 +1,56 @@
+﻿
+FUNCTION_BLOCK "FB_GasDetectorParser"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      IN_wRawData : "UDT_Probe_Raw";   // 从Modbus读取的原始探头数据
+      IN_rdivisor { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Real := 1.0;   // 小数点除数
+   END_VAR
+
+   VAR_OUTPUT 
+      OUT_Data : "UDT_Probe_Data";   // 探头数据输出
+   END_VAR
+
+   VAR 
+      statNo : UInt;   // 探头编号计数器
+   END_VAR
+
+   VAR_TEMP 
+      tempWord : Word;   // 临时变量，用于存储位操作结果
+      tempConcentration : UInt;   // 临时浓度值，用于类型转换
+   END_VAR
+
+
+BEGIN
+	
+	FOR #statNo := 0 TO 15 DO
+	    // 提取报警和状态位
+	    #OUT_Data.OUT_ProbeData[#statNo].wState.%X0 :=#OUT_Data.OUT_ProbeData[#statNo].xLevel1Alarm := #IN_wRawData.RawData[#statNo].%X15;   // BIT15: 一级报警位
+	    #OUT_Data.OUT_ProbeData[#statNo].wState.%X1 :=#OUT_Data.OUT_ProbeData[#statNo].xLevel2Alarm := #IN_wRawData.RawData[#statNo].%X14;   // BIT14: 二级报警位
+	    #OUT_Data.OUT_ProbeData[#statNo].wState.%X2 :=#OUT_Data.OUT_ProbeData[#statNo].xFault := #IN_wRawData.RawData[#statNo].%X13;         // BIT13: 故障位
+	    #OUT_Data.OUT_ProbeData[#statNo].wState.%X3 :=#OUT_Data.OUT_ProbeData[#statNo].xMasked := #IN_wRawData.RawData[#statNo].%X12;        // BIT12: 屏蔽位
+	    
+	    // 提取浓度值 (BIT0-BIT11)
+	    // 使用位掩码 0x0FFF (二进制: 0000 1111 1111 1111) 提取低12位
+	    #tempWord := #IN_wRawData.RawData[#statNo] AND 16#0FFF;
+	    #tempConcentration := WORD_TO_UINT(#tempWord);
+	    // 计算实际浓度值
+	    #OUT_Data.OUT_ProbeData[#statNo].rConcentration := UINT_TO_REAL(#tempConcentration) * #IN_rdivisor;
+	    
+	    // 更新状态字（0:正常, 1:二级报警, 2:一级报警, 3:故障, 4:屏蔽）
+	    IF #IN_wRawData.RawData[#statNo].%X14 THEN
+	        #OUT_Data.OUT_ProbeData[#statNo].uiState := 1;  // 二级报警优先级最高
+	    ELSIF #IN_wRawData.RawData[#statNo].%X15 THEN
+	        #OUT_Data.OUT_ProbeData[#statNo].uiState := 2;  // 一级报警次之
+	    ELSIF #IN_wRawData.RawData[#statNo].%X13 THEN
+	        #OUT_Data.OUT_ProbeData[#statNo].uiState := 3;  // 故障状态
+	    ELSIF #IN_wRawData.RawData[#statNo].%X12 THEN
+	        #OUT_Data.OUT_ProbeData[#statNo].uiState := 4;  // 屏蔽状态
+	    ELSE
+	        #OUT_Data.OUT_ProbeData[#statNo].uiState := 0;  // 正常状态
+	    END_IF;
+	END_FOR;
+	
+	
+END_FUNCTION_BLOCK
+

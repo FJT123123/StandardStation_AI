@@ -1,0 +1,90 @@
+FUNCTION_BLOCK "HydrogenCylinder_FB"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      IN_xClear_Btn : Bool;   // 清除按钮
+      IN_xStart_if : Bool;    // 启动接口
+      IN_rPressure : Real;    // 压力值
+      IN_rPT_Max : Real;      // 最大压力阈值
+      IN_rPCT : Real;         // 百分比系数
+      IN_rTemperature : Real; // 温度值
+      IN_rVolume : Real;      // 体积值(m³)
+   END_VAR
+
+   VAR_OUTPUT 
+      OUT_rMass : Real;       // 计算的氢气质量(kg)
+   END_VAR
+
+   VAR_IN_OUT 
+      INOUT_iTimes : DInt;    // 压力波动次数计数器
+   END_VAR
+
+   VAR 
+      rPT_MaxPercent : Real;  // 最大压力百分比阈值
+      rPressureRef : Real;    // 参考压力值
+      R_TRIG_Start {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;  // 启动上升沿检测
+      xStart_Rising { S7_SetPoint := 'True'} : Bool;  // 启动上升沿标志
+      F_TRIG_Start {InstructionName := 'F_TRIG'; LibVersion := '1.0'} : F_TRIG;  // 启动下降沿检测
+      xStart_Falling { S7_SetPoint := 'True'} : Bool; // 启动下降沿标志
+      rPressureDiff : Real;   // 压力差值
+      iTimes_Internal : DInt; // 内部计数器
+      R_TRIG_Threshold {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG; // 阈值检测上升沿
+      TEMP_rPressurePa { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Real;   // 压力值(Pa)
+      TEMP_rTemperatureK { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Real; // 温度值(K)
+      TEMP_rVolumeM3 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Real;     // 体积值(m³)
+      TEMP_rMoles { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Real;        // 氢气摩尔数
+      TEMP_rR { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Real;            // 气体常数(J/(mol·K))
+   END_VAR
+
+
+BEGIN
+	REGION 压力波动
+	    #rPT_MaxPercent := #IN_rPT_Max * #IN_rPCT;
+	    #R_TRIG_Start(CLK := #IN_xStart_if,
+	                  Q => #xStart_Rising);
+	    #F_TRIG_Start(CLK := #IN_xStart_if,
+	                  Q => #xStart_Falling);
+	    #R_TRIG_Threshold(CLK := (#rPressureDiff >= #rPT_MaxPercent));
+	    
+	    IF #xStart_Rising THEN
+	        #rPressureRef := #IN_rPressure;
+	    END_IF;
+	    
+	    IF #xStart_Falling THEN
+	        #rPressureDiff := ABS(#IN_rPressure - #rPressureRef);
+	        
+	        IF #R_TRIG_Threshold.Q THEN
+	            #INOUT_iTimes := #INOUT_iTimes + 1;
+	        END_IF;
+	    END_IF;
+	    
+	    IF #IN_xClear_Btn THEN
+	        #INOUT_iTimes := 0;
+	    END_IF;
+	END_REGION
+	
+	
+	REGION 氢气质量
+	    // 单位转换
+	    #TEMP_rPressurePa := #IN_rPressure * 1.0e6;           // MPa转Pa
+	    #TEMP_rTemperatureK := #IN_rTemperature + 273.15;      // °C转K
+	    #TEMP_rVolumeM3 := #IN_rVolume * 1.0;                  // 保持m³单位
+	    
+	    // 设置常数
+	    #TEMP_rR := 8.314;                                     // 气体常数 (J/(mol·K))
+	    
+	    // 使用理想气体方程计算摩尔数
+	    // PV = nRT
+	    // n = PV/RT
+	    // 添加除零保护
+	    IF #TEMP_rTemperatureK > 0.0 THEN
+	        #TEMP_rMoles := (#TEMP_rPressurePa * #TEMP_rVolumeM3) / (#TEMP_rR * #TEMP_rTemperatureK);
+	    ELSE
+	        #TEMP_rMoles := 0.0;
+	    END_IF;
+	    
+	    // 计算质量 (氢气摩尔质量为2.016 g/mol = 0.002016 kg/mol)
+	    #OUT_rMass := #TEMP_rMoles * 0.002016;
+	END_REGION
+	
+END_FUNCTION_BLOCK

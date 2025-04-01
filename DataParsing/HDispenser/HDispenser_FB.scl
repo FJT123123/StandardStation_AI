@@ -1,0 +1,52 @@
+﻿FUNCTION_BLOCK "HDispenser_FB"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      IN_Date : "UDT_HDispenser_Raw";
+   END_VAR
+
+   VAR_OUTPUT 
+      OUT_Date : "UDT_HDispenser_Data";
+   END_VAR
+
+   VAR 
+      LastHeartbeat : Int;
+      HeartbeatTimer {InstructionName := 'TON_TIME'; LibVersion := '1.0'; S7_SetPoint := 'False'} : TON_TIME;
+      bool_in { S7_SetPoint := 'True'} : Bool;
+      xFirstScan : Bool;
+   END_VAR
+
+
+BEGIN
+	
+	#OUT_Date.进气气控阀状态 := #IN_Date.进气气控阀状态;
+	#OUT_Date."枪 1 气控阀状态" := #IN_Date."枪 1 气控阀状态";
+	#OUT_Date."枪 2 气控阀状态" := #IN_Date."枪 2 气控阀状态";
+	#OUT_Date.进气压力 := #IN_Date.进气压力 * 0.01;
+	#OUT_Date.枪1实时压力 := #IN_Date."枪 1 实时压力 2" * 0.01;
+	#OUT_Date.枪2实时压力 := #IN_Date."枪 2 实时压力 2" * 0.01;
+	#OUT_Date.枪1温度 := #IN_Date."枪 1 实时温度" * 1.0 - 100.0;
+	#OUT_Date.枪2温度 := #IN_Date."枪 2 实时温度" * 1.0 - 100.0;
+	#OUT_Date.实时流量 := #IN_Date.流速 * 0.06;
+	#OUT_Date.本次加注量 := #IN_Date.加气量 * 0.01;
+	#OUT_Date.累计加注量 := #IN_Date.加气机累计 * 0.01;
+	
+	#HeartbeatTimer(IN := #bool_in,
+	                PT := t#3s);
+	IF #xFirstScan THEN
+	    #xFirstScan := FALSE;
+	    #bool_in := TRUE;
+	    #LastHeartbeat := #IN_Date.心跳标志;
+	END_IF;
+	
+	IF #HeartbeatTimer.Q THEN
+	    #bool_in := false;
+	    IF #LastHeartbeat = #IN_Date.心跳标志 THEN
+	        #OUT_Date.运行状态 := 4;
+	        #bool_in := TRUE;
+	    ELSE
+	        #OUT_Date.运行状态 := #IN_Date.运行状态;
+	        #bool_in := TRUE;
+	    END_IF;
+	END_IF;
+END_FUNCTION_BLOCK
