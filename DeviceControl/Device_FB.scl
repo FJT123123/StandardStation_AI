@@ -11,7 +11,7 @@ VERSION : 0.1
 //
 //使用说明：
 //1. 输入参数：
-//   - IN_xSys_EDS：安全联锁信号，为0时强制停止设备
+//   - IN_xSys_EDS：安全联锁信号，为1时强制停止设备
 //   - IN_xM_A：模式选择，1为自动模式，0为手动模式
 //   - IN_xREST：复位信号，用于清除报警
 //
@@ -77,7 +77,7 @@ BEGIN
 	    REGION 安全联锁处理/自动/手动模式切换
 	        // 安全联锁处理，最高优先级
 	        // 增加报警联锁：任意报警发生时都需要关闭设备
-	        IF NOT #IN_xSys_EDS OR #ALM.OUT_wALM <> 0 THEN
+	        IF #IN_xSys_EDS OR #ALM.OUT_wALM <> 0 THEN
 	            #Map.OUT_xActualOut := 0;
 	            
 	        ELSIF #IN_xM_A THEN
