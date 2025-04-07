@@ -1,0 +1,18 @@
+DATA_BLOCK "Map_DB"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+NON_RETAIN
+   VAR 
+      // 模拟量I/O映射数组[1..40]
+      Ana_Map : Array[1..40] of "UDT_Ana_Map";
+      
+      // 设备控制I/O映射数组[1..10]
+      Device_Map : Array[1..10] of "UDT_Device_Map";
+      
+      // 阀门控制I/O映射数组[1..15]
+      Valve_Map : Array[1..15] of "UDT_Valve_Map";
+   END_VAR
+
+
+BEGIN
+END_DATA_BLOCK

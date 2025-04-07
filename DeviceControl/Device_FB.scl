@@ -1,4 +1,4 @@
-﻿FUNCTION_BLOCK "Device_FB"
+FUNCTION_BLOCK "Device_FB"
    TITLE = 设备控制功能块
 { S7_Optimized_Access := 'TRUE' }
 VERSION : 0.1

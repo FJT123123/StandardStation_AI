@@ -1,0 +1,26 @@
+ORGANIZATION_BLOCK "Main"
+TITLE = 主程序块
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 樊江涛
+VERSION : 0.1
+
+//
+//功能说明：
+//1. 本程序用于集中管理所有功能块的实例化
+//2. 包括模拟量、设备控制、阀门控制等功能块的实例化代码
+//3. 将功能块与对应的数据块建立连接，确保数据的正确传递和处理
+//
+BEGIN
+    // 调用模拟量功能块实例化子程序
+    "Ana_Instance"();
+    
+    // 调用设备控制功能块实例化子程序
+    "Device_Instance"();
+    
+    // 调用阀门控制功能块实例化子程序
+    "Valve_Instance"();
+    
+    // 调用系统状态机功能块实例化子程序
+    "SystemStateMachine_Instance"();
+    
+END_ORGANIZATION_BLOCK

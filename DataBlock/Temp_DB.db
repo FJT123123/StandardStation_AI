@@ -1,0 +1,18 @@
+DATA_BLOCK "Temp_DB"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+NON_RETAIN
+   VAR 
+      // 模拟量临时变量数组[1..40]
+      Ana_Temp : Array[1..40] of "UDT_Ana_Temp";
+      
+      // 设备控制临时变量数组[1..10]
+      Device_Temp : Array[1..10] of "UDT_Device_Temp";
+      
+      // 阀门控制临时变量数组[1..15]
+      Valve_Temp : Array[1..15] of "UDT_Valve_Temp";
+   END_VAR
+
+
+BEGIN
+END_DATA_BLOCK

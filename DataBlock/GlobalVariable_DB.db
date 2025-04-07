@@ -1,0 +1,61 @@
+DATA_BLOCK "GlobalVariable_DB"
+TITLE = 全局变量数据块
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 樊江涛
+VERSION : 0.1
+
+//
+//功能说明：
+//1. 本数据块用于存储系统全局变量
+//2. 包含系统安全联锁、复位等关键控制信号
+//3. 供其他功能块调用和访问
+//
+
+STRUCT
+    // 系统安全联锁和紧急停止信号
+    // 用于紧急情况下强制停止所有设备
+    // 同时作为系统安全联锁和紧急停止功能
+    xSys_SafetyInterlock : Bool := FALSE;
+    
+    // 系统复位信号
+    // 用于清除系统故障和报警
+    xSys_Reset : Bool := FALSE;
+    
+    // 系统手自动模式切换信号
+    // TRUE=自动模式，FALSE=手动模式
+    xSys_M_A : Bool := FALSE;
+    
+    // 系统远程/本地模式切换信号
+    // TRUE=远程模式，FALSE=本地模式
+    xSys_RemoteMode : Bool := FALSE;
+    
+    // 远程启停命令
+    // TRUE=启动，FALSE=停止
+    xSys_RemoteStartCmd : Bool := FALSE;
+    
+    // 本地启动按钮
+    xSys_LocalStart : Bool := FALSE;
+    
+    // 本地停止按钮
+    xSys_LocalStop : Bool := FALSE;
+    
+    // 系统故障信号
+    xSys_Fault : Bool := FALSE;
+    
+    // 系统预警信号
+    xSys_Warning : Bool := FALSE;
+    
+    xSys_Running : Bool := FALSE;
+
+    xSystemState : Int := 0;
+    xFaultCode : Int := 0;
+    
+    // 系统运行时间（掉电保持）
+    xSys_RunTime {S7_Retain := 'True'} : Time := T#0MS;
+    
+    // 系统启动次数（掉电保持）
+    xSys_StartCount {S7_Retain := 'True'} : DInt := 0;
+END_STRUCT;
+
+BEGIN
+END_DATA_BLOCK

@@ -1,0 +1,18 @@
+DATA_BLOCK "Keep_DB"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+RETAIN
+   VAR 
+      // 模拟量保持数据数组[1..40]
+      Ana_Keep : Array[1..40] of "UDT_Ana_Keep";
+      
+      // 设备控制保持数据数组[1..10]
+      Device_Keep : Array[1..10] of "UDT_Device_Keep";
+      
+      // 阀门控制保持数据数组[1..15]
+      Valve_Keep : Array[1..15] of "UDT_Valve_Keep";
+   END_VAR
+
+
+BEGIN
+END_DATA_BLOCK

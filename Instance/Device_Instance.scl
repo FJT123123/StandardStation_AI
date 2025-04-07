@@ -1,0 +1,27 @@
+FUNCTION "Device_Instance"
+TITLE = 设备控制功能块实例化
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 樊江涛
+VERSION : 0.1
+
+
+VAR
+    // 循环计数器
+    i : Int;
+    // 设备控制功能块实例 [1..10]
+    Device_Instance : ARRAY[1..10] OF "Device_FB";
+END_VAR
+
+BEGIN
+    // 设备控制功能块实例化 [1..10]
+    FOR i := 1 TO 10 DO
+        Device_Instance[i](Map := "Map_DB".Device_Map[i],
+                          Temp := "Temp_DB".Device_Temp[i],
+                          HMI := "HMI_DB".Device_HMI[i],
+                          Keep := "Keep_DB".Device_Keep[i],
+                          ALM := "ALM_DB".Device_ALM[i],
+                          IN_xSys_EDS := "GlobalVariable_DB".xSys_SafetyInterlock,
+                          IN_xM_A := "GlobalVariable_DB".xSys_M_A,
+                          IN_xREST := "GlobalVariable_DB".xSys_Reset);
+    END_FOR;
+END_FUNCTION

@@ -1,4 +1,4 @@
-﻿TYPE "UDT_Ana_ALM"
+TYPE "UDT_Ana_ALM"
 VERSION : 0.1
    STRUCT
       OUT_wInterlock : Word;   //   联锁字 (Bit0=高高报警, Bit1=低低报警, Bit2=传感器1故障, Bit3=传感器2故障, Bit4=传感器3故障)

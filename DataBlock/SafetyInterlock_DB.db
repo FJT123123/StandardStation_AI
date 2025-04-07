@@ -1,0 +1,47 @@
+DATA_BLOCK "SafetyInterlock_DB"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+NON_RETAIN
+   VAR 
+      // 系统级安全联锁
+      SystemSafetyInterlock : Bool := TRUE;   // 系统级安全联锁状态
+      EmergencyStopActive : Bool;   // 紧急停止激活
+      MainPowerFault : Bool;   // 主电源故障
+      SafetyDoorOpen : Bool;   // 安全门打开
+      
+      // 设备级安全联锁
+      DeviceSafetyInterlock : Struct   // 设备安全联锁
+         CompressorSafetyInterlock : Bool := TRUE;   // 压缩机安全联锁
+         ChillerSafetyInterlock : Bool := TRUE;   // 冷水机安全联锁
+         PumpSafetyInterlock : Bool := TRUE;   // 水泵安全联锁
+         FanSafetyInterlock : Bool := TRUE;   // 风机安全联锁
+      END_STRUCT;
+      
+      // 阀门安全联锁
+      ValveSafetyInterlock : Struct   // 阀门安全联锁
+         MainGasValveSafetyInterlock : Bool := TRUE;   // 主气路阀门安全联锁
+         PurgingValveSafetyInterlock : Bool := TRUE;   // 吹扫阀门安全联锁
+         CoolingValveSafetyInterlock : Bool := TRUE;   // 冷却阀门安全联锁
+      END_STRUCT;
+      
+      // 安全联锁触发原因
+      InterlockTriggerReason : Int;   // 安全联锁触发原因代码
+      /*
+      触发原因代码说明：
+      0 = 正常
+      1 = 紧急停止按钮被按下
+      2 = 主电源故障
+      3 = 安全门被打开
+      4 = 压缩机故障
+      5 = 冷水机故障
+      6 = 水泵故障
+      7 = 风机故障
+      8 = 主气路阀门故障
+      9 = 吹扫阀门故障
+      10 = 冷却阀门故障
+      */
+   END_VAR
+
+BEGIN
+
+END_DATA_BLOCK

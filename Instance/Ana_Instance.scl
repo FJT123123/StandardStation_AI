@@ -1,0 +1,27 @@
+FUNCTION "Ana_Instance"
+TITLE = 模拟量功能块实例化
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 樊江涛
+VERSION : 0.1
+
+
+
+VAR
+    // 循环计数器
+    i : Int;
+    // 模拟量功能块实例 [1..40]
+    Ana_Instance : ARRAY[1..40] OF "Ana_FB";
+END_VAR
+
+BEGIN
+    // 模拟量功能块实例化 [1..40]
+    FOR i := 1 TO 40 DO
+        Ana_Instance[i](Map := "Map_DB".Ana_Map[i],
+                       Temp := "Temp_DB".Ana_Temp[i],
+                       HMI := "HMI_DB".Ana_HMI[i],
+                       Keep := "Keep_DB".Ana_Keep[i],
+                       ALM := "ALM_DB".Ana_ALM[i],
+                       PreAlarm := "PreAlarm_DB".Ana_PreAlarm[i],
+                       IN_xALMREST := "GlobalVariable_DB".xSys_Reset);
+    END_FOR;
+END_FUNCTION

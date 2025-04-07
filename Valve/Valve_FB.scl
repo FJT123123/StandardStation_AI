@@ -1,4 +1,4 @@
-﻿FUNCTION_BLOCK "Valve_FB"
+FUNCTION_BLOCK "Valve_FB"
 
    TITLE = 阀门功能块
 { S7_Optimized_Access := 'TRUE' }

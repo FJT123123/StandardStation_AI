@@ -1,0 +1,28 @@
+FUNCTION "Valve_Instance"
+TITLE = 阀门控制功能块实例化
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 樊江涛
+VERSION : 0.1
+
+
+
+VAR
+    // 循环计数器
+    i : Int;
+    // 阀门控制功能块实例 [1..15]
+    Valve_Instance : ARRAY[1..15] OF "Valve_FB";
+END_VAR
+
+BEGIN
+    // 阀门控制功能块实例化 [1..15]
+    FOR i := 1 TO 15 DO
+        Valve_Instance[i](Map := "Map_DB".Valve_Map[i],
+                         Temp := "Temp_DB".Valve_Temp[i],
+                         HMI := "HMI_DB".Valve_HMI[i],
+                         Keep := "Keep_DB".Valve_Keep[i],
+                         ALM := "ALM_DB".Valve_ALM[i],
+                         IN_xSys_EDS := "GlobalVariable_DB".xSys_SafetyInterlock,
+                         IN_xM_A := "GlobalVariable_DB".xSys_M_A,
+                         IN_xREST := "GlobalVariable_DB".xSys_Reset);
+    END_FOR;
+END_FUNCTION

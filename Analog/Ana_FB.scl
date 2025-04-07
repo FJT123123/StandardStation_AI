@@ -1,4 +1,4 @@
-﻿FUNCTION_BLOCK "Ana_FB"
+FUNCTION_BLOCK "Ana_FB"
 
 
 TITLE = 模拟量功能块
