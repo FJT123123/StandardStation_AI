@@ -1,4 +1,4 @@
-﻿FUNCTION "Device_Instance"
+﻿FUNCTION_BLOCK "Device_Instance"
 TITLE = 设备控制功能块实例化
 { S7_Optimized_Access := 'TRUE' }
 AUTHOR : 樊江涛
@@ -24,4 +24,4 @@ BEGIN
                           IN_xM_A := "GlobalVariable_DB".xSys_M_A,
                           IN_xREST := "GlobalVariable_DB".xSys_Reset);
     END_FOR;
-END_FUNCTION
+END_FUNCTION_BLOCK

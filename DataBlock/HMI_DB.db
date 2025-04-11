@@ -1,16 +1,13 @@
 ﻿DATA_BLOCK "HMI_DB"
-{ S7_Optimized_Access := 'TRUE' }
+{ S7_Optimized_Access := 'FALSE' }
 VERSION : 0.1
 NON_RETAIN
    VAR 
-      // 模拟量HMI接口数组[1..40]
-      Ana_HMI : Array[1..40] of "UDT_Ana_HMI";
+      Ana_HMI : Array[1..40] of "UDT_Ana_HMI";   // 模拟量HMI接口数组[1..40]
       
-      // 设备控制HMI接口数组[1..10]
-      Device_HMI : Array[1..10] of "UDT_Device_HMI";
+      Device_HMI : Array[1..10] of "UDT_Device_HMI";   // 设备控制HMI接口数组[1..10]
       
-      // 阀门控制HMI接口数组[1..15]
-      Valve_HMI : Array[1..15] of "UDT_Valve_HMI";
+      Valve_HMI : Array[1..15] of "UDT_Valve_HMI";   // 阀门控制HMI接口数组[1..15]
    END_VAR
 
 

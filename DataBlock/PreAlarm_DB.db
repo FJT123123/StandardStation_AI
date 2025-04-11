@@ -1,10 +1,9 @@
 ﻿DATA_BLOCK "PreAlarm_DB"
-{ S7_Optimized_Access := 'TRUE' }
+{ S7_Optimized_Access := 'FALSE' }
 VERSION : 0.1
 NON_RETAIN
    VAR 
-      // 模拟量预警信息数组[1..40]
-      Ana_PreAlarm : Array[1..40] of "UDT_Ana_PreAlarm";
+      Ana_PreAlarm : Array[1..40] of "UDT_Ana_PreAlarm";   // 模拟量预警信息数组[1..40]
    END_VAR
 
 

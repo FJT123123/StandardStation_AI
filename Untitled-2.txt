@@ -1,0 +1,2 @@
+*.scl text eol=crlf
+*.db text eol=crlf

@@ -3,12 +3,12 @@ FUNCTION_BLOCK "FB_GasDetectorParser"
 { S7_Optimized_Access := 'TRUE' }
 VERSION : 0.1
    VAR_INPUT 
-      IN_wRawData : "UDT_Probe_Raw";   // 从Modbus读取的原始探头数据
+      IN_wRawData : "UDT_GasDetectorParser_Raw";   // 从Modbus读取的原始探头数据
       IN_rdivisor { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Real := 1.0;   // 小数点除数
    END_VAR
 
    VAR_OUTPUT 
-      OUT_Data : "UDT_Probe_Data";   // 探头数据输出
+      OUT_Data : "UDT_GasDetectorParser_Data";   // 探头数据输出
    END_VAR
 
    VAR 

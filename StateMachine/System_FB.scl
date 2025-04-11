@@ -1,4 +1,4 @@
-FUNCTION_BLOCK "System_FB"
+﻿FUNCTION_BLOCK "System_FB"
 { S7_Optimized_Access := 'TRUE' }
 VERSION : 0.1
    VAR_INPUT 

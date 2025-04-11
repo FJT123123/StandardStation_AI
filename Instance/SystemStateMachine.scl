@@ -1,4 +1,4 @@
-﻿FUNCTION "SystemStateMachine_Instance"
+﻿FUNCTION_BLOCK "SystemStateMachine_Instance"
 TITLE = 系统状态机功能块实例化
 { S7_Optimized_Access := 'TRUE' }
 AUTHOR : 樊江涛
@@ -12,18 +12,18 @@ END_VAR
 
 BEGIN
     // 系统状态机功能块实例化
-    System_Instance(AutoMode := "GlobalVariable_DB".xSys_M_A,
-                   RemoteMode := "GlobalVariable_DB".xSys_RemoteMode,
-                   RemoteStartCmd := "GlobalVariable_DB".xSys_RemoteStartCmd,
-                   LocalStart := "GlobalVariable_DB".xSys_LocalStart,
-                   LocalStop := "GlobalVariable_DB".xSys_LocalStop,
-                   Reset := "GlobalVariable_DB".xSys_Reset,
-                   EmergencyStop := "GlobalVariable_DB".xSys_SafetyInterlock,
-                   SystemFault := "GlobalVariable_DB".xSys_Fault,
-                   WarningSignal := "GlobalVariable_DB".xSys_Warning,
-                   Running => "GlobalVariable_DB".xSys_Running,
-                   SystemState => "GlobalVariable_DB".xSystemState,
-                   FaultCode => "GlobalVariable_DB".xFaultCode,
-                   RunTime => "GlobalVariable_DB".xSys_RunTime,
-                   StartCount => "GlobalVariable_DB".xSys_StartCount);
-END_FUNCTION
+    System_Instance(IN_xAutoMode := "GlobalVariable_DB".xSys_M_A,
+                   IN_xRemoteMode := "GlobalVariable_DB".xSys_RemoteMode,
+                   IN_xRemoteStartCmd := "GlobalVariable_DB".xSys_RemoteStartCmd,
+                   IN_xLocalStart := "GlobalVariable_DB".xSys_LocalStart,
+                   IN_xLocalStop := "GlobalVariable_DB".xSys_LocalStop,
+                   IN_xReset := "GlobalVariable_DB".xSys_Reset,
+                   INOUT_xSafetyInterlock := "GlobalVariable_DB".xSys_SafetyInterlock,
+                   INOUT_xSystemFault := "GlobalVariable_DB".xSys_Fault,
+                   INOUT_xWarningSignal := "GlobalVariable_DB".xSys_Warning,
+                   OUT_xRunning => "GlobalVariable_DB".xSys_Running,
+                   OUT_iSystemState => "GlobalVariable_DB".xSystemState,
+                   OUT_iFaultCode => "GlobalVariable_DB".xFaultCode,
+                   OUT_tRunTime => "GlobalVariable_DB".xSys_RunTime,
+                   OUT_diStartCount => "GlobalVariable_DB".xSys_StartCount);
+END_FUNCTION_BLOCK

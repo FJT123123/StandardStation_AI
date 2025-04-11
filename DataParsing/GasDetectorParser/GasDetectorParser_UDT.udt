@@ -16,7 +16,7 @@ TYPE "UDT_GasDetectorParser_Data"
 VERSION : 0.1
    STRUCT
       OUT_iHeartbeat : Int;   // 心跳计数器
-      OUT_ProbeData : Array[0..15] of "UDT_Probe_ALM";   // 探头数据数组
+      OUT_ProbeData : Array[0..15] of "UDT_GasDetectorParser_ALM";   // 探头数据数组
    END_STRUCT;
 
 END_TYPE

@@ -1,10 +1,8 @@
-﻿FUNCTION "Ana_Instance"
+﻿FUNCTION_BLOCK "Ana_Instance"
 TITLE = 模拟量功能块实例化
 { S7_Optimized_Access := 'TRUE' }
 AUTHOR : 樊江涛
 VERSION : 0.1
-
-
 
 VAR
     // 循环计数器
@@ -24,4 +22,4 @@ BEGIN
                        PreAlarm := "PreAlarm_DB".Ana_PreAlarm[i],
                        IN_xALMREST := "GlobalVariable_DB".xSys_Reset);
     END_FOR;
-END_FUNCTION
+END_FUNCTION_BLOCK
