@@ -1,4 +1,4 @@
-FUNCTION "SystemStateMachine_Instance"
+﻿FUNCTION "SystemStateMachine_Instance"
 TITLE = 系统状态机功能块实例化
 { S7_Optimized_Access := 'TRUE' }
 AUTHOR : 樊江涛

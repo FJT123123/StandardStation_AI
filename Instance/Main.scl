@@ -1,4 +1,4 @@
-ORGANIZATION_BLOCK "Main"
+﻿ORGANIZATION_BLOCK "Main"
 TITLE = 主程序块
 { S7_Optimized_Access := 'TRUE' }
 AUTHOR : 樊江涛

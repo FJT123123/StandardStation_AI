@@ -1,4 +1,4 @@
-DATA_BLOCK "GlobalVariable_DB"
+﻿DATA_BLOCK "GlobalVariable_DB"
 TITLE = 全局变量数据块
 { S7_Optimized_Access := 'TRUE' }
 AUTHOR : 樊江涛

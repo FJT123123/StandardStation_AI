@@ -1,4 +1,4 @@
-FUNCTION "Device_Instance"
+﻿FUNCTION "Device_Instance"
 TITLE = 设备控制功能块实例化
 { S7_Optimized_Access := 'TRUE' }
 AUTHOR : 樊江涛

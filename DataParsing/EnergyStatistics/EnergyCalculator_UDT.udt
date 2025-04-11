@@ -1,4 +1,4 @@
-TYPE "UDT_EnergyData"
+﻿TYPE "UDT_EnergyData"
 VERSION : 0.1
    STRUCT
       rCurrentValue : Real;   // 当前能耗值

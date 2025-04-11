@@ -1,4 +1,4 @@
-FUNCTION "Ana_Instance"
+﻿FUNCTION "Ana_Instance"
 TITLE = 模拟量功能块实例化
 { S7_Optimized_Access := 'TRUE' }
 AUTHOR : 樊江涛

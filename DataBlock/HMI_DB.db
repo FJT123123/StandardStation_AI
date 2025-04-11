@@ -1,4 +1,4 @@
-DATA_BLOCK "HMI_DB"
+﻿DATA_BLOCK "HMI_DB"
 { S7_Optimized_Access := 'TRUE' }
 VERSION : 0.1
 NON_RETAIN

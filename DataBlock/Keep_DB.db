@@ -1,4 +1,4 @@
-DATA_BLOCK "Keep_DB"
+﻿DATA_BLOCK "Keep_DB"
 { S7_Optimized_Access := 'TRUE' }
 VERSION : 0.1
 RETAIN

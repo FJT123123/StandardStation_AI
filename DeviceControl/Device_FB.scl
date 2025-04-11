@@ -1,5 +1,5 @@
-FUNCTION_BLOCK "Device_FB"
-   TITLE = 设备控制功能块
+﻿FUNCTION_BLOCK "Device_FB"
+TITLE = 设备控制功能块
 { S7_Optimized_Access := 'TRUE' }
 VERSION : 0.1
 //
@@ -26,8 +26,7 @@ VERSION : 0.1
 //
 //4. 运行时间：
 //   - 统计设备每次启动后的运行时间（分钟）
-//
-VAR_INPUT 
+   VAR_INPUT 
       IN_xSys_EDS : Bool;   // 安全联锁
       IN_xM_A : Bool;   // 自动1/手动0模式切换
       IN_xREST : Bool;   // 复位信号
@@ -38,27 +37,22 @@ VAR_INPUT
       Temp : "UDT_Device_Temp";   // 设备临时变量
       HMI : "UDT_Device_HMI";   // HMI接口
       Keep : "UDT_Device_Keep";   // 掉电保持数据
-      ALM : "UDT_Device_ALM";   // 报警信息
+      ALM : "UDT_Device_ALM";   // 报警信息 报警状态
    END_VAR
 
    VAR 
-      // 报警状态
       xStartTimeout : Bool;   // 启动超时状态
-      xStopTimeout : Bool;   // 停止超时状态
-      
-      // 边沿检测
+      xStopTimeout : Bool;   // 停止超时状态 边沿检测
       xLastManualStart : Bool;   // 手动启动上升沿
       xLastManualStop : Bool;   // 手动停止上升沿
-      xLastManualCmd : Bool;    // 手动命令上升沿/下降沿检测
+      xLastManualCmd : Bool;   // 手动命令上升沿/下降沿检测
       xLastM_A : Bool;   // 自动/手动模式切换边沿检测
-      xLastActualOut : Bool;    // 上一周期设备控制状态
-      
-      // 定时器
-      TON_Start{InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : TON_TIME;   // 启动延时
-      TON_Stop{InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : TON_TIME;   // 停止延时
-      TON_Runtime{InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : TON_TIME;   // 运行时间
-      TON_StartPulse{InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : TON_TIME;   // 启动脉冲定时器
-      TON_StopPulse{InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : TON_TIME;   // 停止脉冲定时器
+      xLastActualOut : Bool;   // 上一周期设备控制状态 定时器
+      TON_Start {InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : IEC_TIMER;   // 启动延时
+      TON_Stop {InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : IEC_TIMER;   // 停止延时
+      TON_Runtime {InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : IEC_TIMER;   // 运行时间
+      TON_StartPulse {InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : IEC_TIMER;   // 启动脉冲定时器
+      TON_StopPulse {InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : IEC_TIMER;   // 停止脉冲定时器
    END_VAR
 
    VAR CONSTANT 
@@ -125,13 +119,13 @@ BEGIN
 	        IF #Map.OUT_xActualOut AND NOT #xLastActualOut THEN
 	            // 设备从停止到启动，发出启动信号
 	            #Map.OUT_xStartDevice := 1;
-	            #TON_StartPulse(IN := TRUE,
-	                            PT := T#1S);
+	            #TON_StartPulse.IN := TRUE;
+	            #TON_StartPulse.PT := T#1S;
 	        ELSIF NOT #Map.OUT_xActualOut AND #xLastActualOut THEN
 	            // 设备从启动到停止，发出停止信号
 	            #Map.OUT_xStopDevice := 1;
-	            #TON_StopPulse(IN := TRUE,
-	                           PT := T#1S);
+	            #TON_StopPulse.IN := TRUE;
+	            #TON_StopPulse.PT := T#1S;
 	        END_IF;
 	        
 	        // 1秒后自动复位启动和停止信号
@@ -171,23 +165,23 @@ BEGIN
 	        END_IF;
 	        
 	        // 启动超时检测
-	        #TON_Start(IN := #Map.OUT_xActualOut AND NOT #Temp.OUT_xStartOK,
-	                   PT := #Keep.IN_tStartTime);
+	        #TON_Start.IN := #Map.OUT_xActualOut AND NOT #Temp.OUT_xStartOK;
+	        #TON_Start.PT := #Keep.IN_tStartTime;
 	        IF #TON_Start.Q AND #Keep.IN_xAlarmEnable THEN
 	            #xStartTimeout := TRUE;
 	        END_IF;
 	        
 	        // 停止超时检测
-	        #TON_Stop(IN := NOT #Map.OUT_xActualOut AND NOT #Temp.OUT_xStopOK,
-	                  PT := #Keep.IN_tStopTime);
+	        #TON_Stop.IN := NOT #Map.OUT_xActualOut AND NOT #Temp.OUT_xStopOK;
+	        #TON_Stop.PT := #Keep.IN_tStopTime;
 	        IF #TON_Stop.Q AND #Keep.IN_xAlarmEnable THEN
 	            #xStopTimeout := TRUE;
 	        END_IF;
 	    END_REGION
 	    
 	    REGION 运行时间计算
-	        #TON_Runtime(IN := #Temp.OUT_xStartOK,
-	                     PT := T#24H);
+	        #TON_Runtime.IN := #Temp.OUT_xStartOK;
+	        #TON_Runtime.PT := T#24H;
 	        IF #Temp.OUT_xStartOK THEN
 	            #Keep.OUT_tCurrentRun := DINT_TO_UDINT(TIME_TO_DINT(#TON_Runtime.ET) / 60000); // 转换为分钟
 	        ELSE

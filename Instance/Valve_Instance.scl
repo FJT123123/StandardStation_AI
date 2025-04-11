@@ -1,4 +1,4 @@
-FUNCTION "Valve_Instance"
+﻿FUNCTION "Valve_Instance"
 TITLE = 阀门控制功能块实例化
 { S7_Optimized_Access := 'TRUE' }
 AUTHOR : 樊江涛

@@ -1,8 +1,8 @@
-﻿FUNCTION_BLOCK "ModbusPoll"
+﻿FUNCTION_BLOCK "ModbusRTU_FB"
    { S7_Optimized_Access := 'TRUE' }
 AUTHOR : 樊江涛
 FAMILY : MODBUS
-NAME : ModbusPoll
+NAME : ModbusRTU_FB
 VERSION : 0.1
 VAR_INPUT 
       IN_Req : Bool;   // Modbus RTU 初始化请求

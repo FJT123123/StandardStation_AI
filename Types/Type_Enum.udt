@@ -1,4 +1,4 @@
-TYPE "E_ValveType"
+﻿TYPE "E_ValveType"
 VERSION : 0.1
    STRUCT
       lp_tank_v : UInt := 1;    // 低压管罐口阀

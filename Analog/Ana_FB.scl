@@ -1,6 +1,4 @@
-FUNCTION_BLOCK "Ana_FB"
-
-
+﻿FUNCTION_BLOCK "Ana_FB"
 TITLE = 模拟量功能块
 { S7_Optimized_Access := 'TRUE' }
 AUTHOR : 樊江涛
@@ -20,7 +18,11 @@ VERSION : 0.1
 //   - 支持报警使能和报警延时，每种报警类型有独立延时定时器
 //   - 支持报警屏蔽功能
 //   - 报警状态可通过HMI工程值和状态字监控
-VAR_IN_OUT 
+   VAR_INPUT 
+      IN_xALMREST : Bool;   // 复位信号
+   END_VAR
+
+   VAR_IN_OUT 
       Map : "UDT_Ana_Map";   // 模拟量I/O映射
       Temp : "UDT_Ana_Temp";   // 模拟量临时变量
       HMI : "UDT_Ana_HMI";   // HMI接口
@@ -29,28 +31,23 @@ VAR_IN_OUT
       PreAlarm : "UDT_Ana_PreAlarm";   // 预警信息
    END_VAR
 
-   VAR_INPUT 
-      IN_xALMREST : Bool;   // 复位信号
-   END_VAR
-
    VAR 
-      AlarmTimer{InstructionName := 'IEC_TIMER'; LibVersion := '1.0'}  : TON_TIME;   // 报警延时定时器
+      AlarmTimer {InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : IEC_TIMER;   // 报警延时定时器
       RawValue : Int;   // 3取2后的原始值
-      HHAlarmTimer{InstructionName := 'IEC_TIMER'; LibVersion := '1.0'}  : TON_TIME;   // 高高报警延时定时器
-      LLAlarmTimer{InstructionName := 'IEC_TIMER'; LibVersion := '1.0'}  : TON_TIME;   // 低低报警延时定时器
-      HAlarmTimer{InstructionName := 'IEC_TIMER'; LibVersion := '1.0'}  : TON_TIME;   // 高报警延时定时器
-      LAlarmTimer{InstructionName := 'IEC_TIMER'; LibVersion := '1.0'}  : TON_TIME;   // 低报警延时定时器
+      HHAlarmTimer {InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : IEC_TIMER;   // 高高报警延时定时器
+      LLAlarmTimer {InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : IEC_TIMER;   // 低低报警延时定时器
+      HAlarmTimer {InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : IEC_TIMER;   // 高报警延时定时器
+      LAlarmTimer {InstructionName := 'IEC_TIMER'; LibVersion := '1.0'} : IEC_TIMER;   // 低报警延时定时器 状态常量定义
    END_VAR
 
-   // 状态常量定义
    VAR CONSTANT 
-      ANA_STATE_INIT : UInt := 0;      // 初始状态
-      ANA_STATE_NORMAL : UInt := 1;    // 正常状态
-      ANA_STATE_HH_ALARM : UInt := 2;  // 高高报警
+      ANA_STATE_INIT : UInt := 0;   // 初始状态
+      ANA_STATE_NORMAL : UInt := 1;   // 正常状态
+      ANA_STATE_HH_ALARM : UInt := 2;   // 高高报警
       ANA_STATE_H_ALARM : UInt := 3;   // 高报警
       ANA_STATE_L_ALARM : UInt := 4;   // 低报警
-      ANA_STATE_LL_ALARM : UInt := 5;  // 低低报警
-      ANA_STATE_SENSOR_FAULT : UInt := 6; // 传感器故障
+      ANA_STATE_LL_ALARM : UInt := 5;   // 低低报警
+      ANA_STATE_SENSOR_FAULT : UInt := 6;   // 传感器故障
    END_VAR
 
 
@@ -123,8 +120,8 @@ BEGIN
 	        // 报警使能和延时处理
 	        IF #Keep.IN_ALMEnable THEN
 	            // 启动报警延时定时器
-	            #AlarmTimer(IN := TRUE,
-	                        PT := #Keep.IN_AlarmDelay);
+	            #AlarmTimer.IN := TRUE;
+	            #AlarmTimer.PT := #Keep.IN_AlarmDelay;
 	        ELSE
 	            // 报警未使能时，复位所有报警状态
 	            #AlarmTimer.IN := FALSE;
@@ -166,8 +163,8 @@ BEGIN
 	            // 高高报警条件判断和状态更新（需要手动复位）
 	            IF #Keep.IN_AlarmMask.%X0 AND #HMI.OUT_EngValue >= #Keep.IN_HHLimit THEN
 	                // 启动高高报警延时定时器
-	                #HHAlarmTimer(IN := TRUE,
-	                              PT := #Keep.IN_AlarmDelay);
+	                #HHAlarmTimer.IN := TRUE;
+	                #HHAlarmTimer.PT := #Keep.IN_AlarmDelay;
 	                IF #HHAlarmTimer.Q THEN
 	                    #ALM.OUT_HHAlarm := TRUE;
 	                END_IF;
@@ -180,8 +177,8 @@ BEGIN
 	            // 高报警条件判断和状态更新（自动复位）
 	            IF #Keep.IN_AlarmMask.%X1 AND #HMI.OUT_EngValue >= #Keep.IN_HLimit THEN
 	                // 启动高报警延时定时器
-	                #HAlarmTimer(IN := TRUE,
-	                             PT := #Keep.IN_AlarmDelay);
+	                #HAlarmTimer.IN := TRUE;
+	                #HAlarmTimer.PT := #Keep.IN_AlarmDelay;
 	                IF #HAlarmTimer.Q THEN
 	                    #PreAlarm.OUT_HPreAlarm := TRUE;
 	                END_IF;
@@ -196,8 +193,8 @@ BEGIN
 	            // 低报警条件判断和状态更新（自动复位）
 	            IF #Keep.IN_AlarmMask.%X2 AND #HMI.OUT_EngValue <= #Keep.IN_LLimit THEN
 	                // 启动低报警延时定时器
-	                #LAlarmTimer(IN := TRUE,
-	                             PT := #Keep.IN_AlarmDelay);
+	                #LAlarmTimer.IN := TRUE;
+	                #LAlarmTimer.PT := #Keep.IN_AlarmDelay;
 	                IF #LAlarmTimer.Q THEN
 	                    #PreAlarm.OUT_LPreAlarm := TRUE;
 	                END_IF;
@@ -212,8 +209,8 @@ BEGIN
 	            // 低低报警条件判断和状态更新（需要手动复位）
 	            IF #Keep.IN_AlarmMask.%X3 AND #HMI.OUT_EngValue <= #Keep.IN_LLLimit THEN
 	                // 启动低低报警延时定时器
-	                #LLAlarmTimer(IN := TRUE,
-	                              PT := #Keep.IN_AlarmDelay);
+	                #LLAlarmTimer.IN := TRUE;
+	                #LLAlarmTimer.PT := #Keep.IN_AlarmDelay;
 	                IF #LLAlarmTimer.Q THEN
 	                    #ALM.OUT_LLAlarm := TRUE;
 	                END_IF;
