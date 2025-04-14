@@ -57,7 +57,7 @@ BEGIN
 	    END_REGION
 	    
 	    REGION 电流值计算
-	        // 计算4-20mA电流值//
+	        // 计算4-20mA电流值
 	        IF (#Keep.IN_RawHigh - #Keep.IN_RawLow) <> 0 THEN
 	            #Temp.OUT_RawCurrent1 := INT_TO_REAL(#Map.IN_RawValue1 - #Keep.IN_RawLow) * 16.0 / INT_TO_REAL(#Keep.IN_RawHigh - #Keep.IN_RawLow) + 4.0;
 	            #Temp.OUT_RawCurrent2 := INT_TO_REAL(#Map.IN_RawValue2 - #Keep.IN_RawLow) * 16.0 / INT_TO_REAL(#Keep.IN_RawHigh - #Keep.IN_RawLow) + 4.0;
