@@ -1,0 +1,16 @@
+﻿FUNCTION_BLOCK "485"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR 
+      ModbusRTU_FB_Instance1 : "ModbusRTU_FB";
+      ModbusRTU_FB_Instance2 : "ModbusRTU_FB";
+      ModbusRTU_FB_Instance3 : "ModbusRTU_FB";
+   END_VAR
+
+
+BEGIN
+	#ModbusRTU_FB_Instance1(INOUT_datas:=_array_of_udt_modbus_config_inout_,
+	                        INOUT_wSTATUS:=_array_of_udt_modbus_alm_inout_);
+	
+END_FUNCTION_BLOCK
+
