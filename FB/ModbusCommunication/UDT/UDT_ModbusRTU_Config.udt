@@ -1,0 +1,10 @@
+﻿TYPE "UDT_ModbusRTU_Config"
+VERSION : 0.1
+   STRUCT
+      xReq : Bool := TRUE;   // Modbus RTU 初始化请求
+      hwPort : PORT;   // 串口硬件标识符
+      udiBaud : UDInt := 9600;   // 通信波特率
+      uiParity : UInt := 0;   // 通信奇偶校验位
+      uiRespTo : UInt := 1000;   // 通信超时时间
+   END_STRUCT;
+END_TYPE

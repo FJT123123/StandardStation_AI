@@ -1,0 +1,8 @@
+﻿TYPE "UDT_Modbus_ALM"
+VERSION : 0.1
+   STRUCT
+      ConversionError : Word;   // 数据转换错误
+      DeserializeStatus : Int;   // 反序列化状态
+      ModbusStatus : Word;   // Modbus通信状态
+   END_STRUCT;
+END_TYPE

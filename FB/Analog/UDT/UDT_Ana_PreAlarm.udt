@@ -1,0 +1,9 @@
+﻿TYPE "UDT_Ana_PreAlarm"
+VERSION : 0.1
+   STRUCT
+      OUT_HPreAlarm : Bool;   //   高预警
+      OUT_LPreAlarm : Bool;   //   低预警
+      OUT_wPreAlarm : Word;   //   预警字 (Bit0=高预警, Bit1=低预警)
+   END_STRUCT;
+
+END_TYPE

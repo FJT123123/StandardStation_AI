@@ -1,0 +1,12 @@
+﻿TYPE "UDT_Valve_Temp"
+VERSION : 0.1
+   STRUCT
+      IN_xAutoCmd : Bool;   //  自动模式开阀
+      IN_xManualCmd : Bool;   //  手动模式下的阀门控制辅助命令/1为开，0为关
+      IN_xOpenCondition : Bool := TRUE;   //  开阀运行条件
+      IN_xCloseCondition : Bool := TRUE;   //  关阀运行条件
+      OUT_xOpenOK : Bool;   //  开到位
+      OUT_xCloseOK : Bool;   //  关到位
+   END_STRUCT;
+
+END_TYPE

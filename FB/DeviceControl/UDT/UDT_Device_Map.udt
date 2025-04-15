@@ -1,0 +1,11 @@
+﻿TYPE "UDT_Device_Map"
+VERSION : 0.1
+   STRUCT
+      IN_xStartFeedback : Bool;   //    设备启动反馈
+      IN_xAlarmFeedback : Bool;   //    设备报警反馈
+      OUT_xActualOut : Bool;   //    设备控制
+      OUT_xStartDevice : Bool;   //    启动对方设备信号（上升沿有效，1秒后自动复位）
+      OUT_xStopDevice : Bool;   //    停止对方设备信号（下降沿有效，1秒后自动复位）
+   END_STRUCT;
+
+END_TYPE

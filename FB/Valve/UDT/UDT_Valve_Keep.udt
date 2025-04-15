@@ -1,0 +1,10 @@
+﻿TYPE "UDT_Valve_Keep"
+VERSION : 0.1
+   STRUCT
+      IN_tOpenTime : Time := T#10S;   //  开阀超时时间
+      IN_tCloseTime : Time := T#10S;   //  关阀超时时间
+      IN_xALMEnable : Bool := TRUE;   //  报警使能
+      INOUT_udiCount : UDInt;   //  计次
+   END_STRUCT;
+
+END_TYPE

@@ -1,0 +1,10 @@
+﻿TYPE "UDT_Modbus_Config"
+VERSION : 0.1
+   STRUCT
+      mbAddr : UInt;   // 从站地址
+      mode : UInt;   // 通信模式（0：读，1：写）
+      dataAddr : UDInt;   // 数据地址
+      dataLen : UInt;   // 数据长度
+      instrument : DB_ANY;   // 数据区指针
+   END_STRUCT;
+END_TYPE

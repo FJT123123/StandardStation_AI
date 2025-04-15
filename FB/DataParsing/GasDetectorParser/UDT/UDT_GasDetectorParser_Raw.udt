@@ -1,0 +1,7 @@
+﻿TYPE "UDT_GasDetectorParser_Raw"
+VERSION : 0.1
+   STRUCT
+      RawData : Array[0..15] of Word;   // 探头原始数据（每个Word包含报警状态和浓度值）
+   END_STRUCT;
+
+END_TYPE

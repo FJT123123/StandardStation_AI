@@ -1,0 +1,9 @@
+﻿TYPE "UDT_Valve_Map"
+VERSION : 0.1
+   STRUCT
+      IN_xOpenFeedback : Bool;   //  传感器开
+      IN_xCloseFeedback : Bool;   //  传感器关
+      OUT_xActualOut : Bool;   //  阀门控制
+   END_STRUCT;
+
+END_TYPE

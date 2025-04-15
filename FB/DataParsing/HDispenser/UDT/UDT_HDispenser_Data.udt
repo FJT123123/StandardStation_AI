@@ -1,0 +1,20 @@
+﻿TYPE "UDT_HDispenser_Data"
+VERSION : 0.1
+   STRUCT
+      心跳标志 : Int;
+      运行状态 : Int;
+      进气气控阀状态 : Int;
+      "枪 1 气控阀状态" : Int;
+      "枪 2 气控阀状态" : Int;
+      进气压力 : Real;
+      枪1实时压力 : Real;
+      枪2实时压力 : Real;
+      枪1温度 : Real;
+      枪2温度 : Real;
+      实时流量 : Real;
+      本次加注量 : Real;
+      本次加注时间 : Real;
+      累计加注量 : Real;
+   END_STRUCT;
+
+END_TYPE

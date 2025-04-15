@@ -1,0 +1,10 @@
+﻿TYPE "UDT_Device_Keep"
+VERSION : 0.1
+   STRUCT
+      IN_tStartTime : Time := T#10S;   //    启动设备超时时间
+      IN_tStopTime : Time := T#10S;   //    停止设备超时时间
+      IN_xAlarmEnable : Bool := TRUE;   //    报警使能
+      OUT_tCurrentRun : UDInt;   //    本次运行时间(分钟)
+   END_STRUCT;
+
+END_TYPE

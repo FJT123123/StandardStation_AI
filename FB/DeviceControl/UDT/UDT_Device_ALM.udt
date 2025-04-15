@@ -1,0 +1,10 @@
+﻿TYPE "UDT_Device_ALM"
+VERSION : 0.1
+   STRUCT
+      OUT_wALM : Word;   //    报警字 (Bit0=启动设备超时报警, Bit1=停止设备超时报警, Bit2=设备报警)
+      OUT_xStartTimeout : Bool;   //    启动设备超时
+      OUT_xStopTimeout : Bool;   //    停止设备超时
+      OUT_xDeviceAlarm : Bool;   //    设备报警
+   END_STRUCT;
+
+END_TYPE

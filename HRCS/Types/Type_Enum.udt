@@ -36,10 +36,5 @@ VERSION : 0.1
       PT_purge_pre : UInt := 3;   // 吹扫风减压前压力
       PT_purge_post : UInt := 4;  // 吹扫风减压后压力
       PT_hp_tank : UInt := 5;     // 高压罐口压力
-      PT_mp_tank : UInt := 6;     // 中压罐口压力
-      PT_lp_tank : UInt := 7;     // 低压罐口压力
-      PT_vent : UInt := 8;        // 卸气柱卸气压力
-      H2_conc : UInt := 9;        // 卸气柱氢气浓度
-      PT_trans : UInt := 10;      // 倒罐进气压力
    END_STRUCT;
 END_TYPE

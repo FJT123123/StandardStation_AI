@@ -1,0 +1,20 @@
+﻿TYPE "UDT_Ana_Keep"
+VERSION : 0.1
+   STRUCT
+      IN_RawHigh : Int;   //   原始值量程上限
+      IN_RawLow : Int;   //   原始值量程下限
+      IN_EngHigh : Real;   //   工程值量程上限
+      IN_EngLow : Real;   //   工程值量程下限
+      IN_LLLimit : Real;   //   低低报警限值
+      IN_LLimit : Real;   //   低报警限值
+      IN_HLimit : Real;   //   高报警限值
+      IN_HHLimit : Real;   //   高高报警限值
+      IN_DeadBand : Real;   //   报警死区
+      IN_AlarmMask : Int;   //   报警屏蔽（0位:高高报警, 1位:高报警, 2位:低报警, 3位:低低报警）
+      IN_SensorFaultHigh : Real;   //   传感器故障上限
+      IN_SensorFaultLow : Real;   //   传感器故障下限
+      IN_ALMEnable : Bool := TRUE;   //   报警使能
+      IN_AlarmDelay : Time := T#1S;   //   报警延时
+   END_STRUCT;
+
+END_TYPE

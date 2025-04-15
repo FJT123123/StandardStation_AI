@@ -1,0 +1,9 @@
+﻿TYPE "UDT_Ana_Map"
+VERSION : 0.1
+   STRUCT
+      IN_RawValue1 : Int;   //   传感器1原始值
+      IN_RawValue2 : Int;   //   传感器2原始值
+      IN_RawValue3 : Int;   //   传感器3原始值
+   END_STRUCT;
+
+END_TYPE

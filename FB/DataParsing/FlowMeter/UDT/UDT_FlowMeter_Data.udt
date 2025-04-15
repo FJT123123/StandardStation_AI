@@ -1,0 +1,10 @@
+﻿TYPE "UDT_FlowMeter_Data"
+VERSION : 0.1
+   STRUCT
+      OUT_Heartbeat : Int;   // 心跳信号
+      OUT_FlowRate : Real;   // 实时流量
+      OUT_CurrentMass : Real;   // 当前充装质量
+      OUT_TotalMass : Real;   // 总累计质量
+      OUT_PowerConsumption : Real;   // 当前功耗
+   END_STRUCT;
+END_TYPE

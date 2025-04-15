@@ -1,0 +1,13 @@
+﻿TYPE "UDT_GasDetectorParser_ALM"
+VERSION : 0.1
+   STRUCT
+      xLevel1Alarm : Bool;   // 一级报警状态 (BIT15)
+      xLevel2Alarm : Bool;   // 二级报警状态 (BIT14)
+      xFault : Bool;   // 故障状态 (BIT13)
+      xMasked : Bool;   // 屏蔽状态 (BIT12)
+      rConcentration : Real;   // 处理后的浓度值（带小数点）
+      wState : Word;   // 状态整数值（0:正常, 1:屏蔽, 2:故障, 3:二级报警, 4:一级报警）
+      uiState : UInt;   // 状态字（0:正常, 1:二级报警, 2:一级报警, 3:故障, 4:屏蔽）
+   END_STRUCT;
+
+END_TYPE

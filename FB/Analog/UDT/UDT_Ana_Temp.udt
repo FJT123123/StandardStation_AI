@@ -1,0 +1,15 @@
+﻿TYPE "UDT_Ana_Temp"
+VERSION : 0.1
+   STRUCT
+      IN_SimMode : Bool;   //   模拟模式
+      IN_ManualValue : Real;   //   手动设定值
+      IN_Enable3Take2 : Bool;   //   启用3取2功能
+      OUT_EngValue1 : Real;   //   传感器1工程值
+      OUT_EngValue2 : Real;   //   传感器2工程值
+      OUT_EngValue3 : Real;   //   传感器3工程值
+      OUT_RawCurrent1 : Real;   //   传感器1电流值(mA)
+      OUT_RawCurrent2 : Real;   //   传感器2电流值(mA)
+      OUT_RawCurrent3 : Real;   //   传感器3电流值(mA)
+   END_STRUCT;
+
+END_TYPE

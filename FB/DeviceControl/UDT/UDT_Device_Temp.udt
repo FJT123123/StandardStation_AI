@@ -1,0 +1,11 @@
+﻿TYPE "UDT_Device_Temp"
+VERSION : 0.1
+   STRUCT
+      IN_xAutoCmd : Bool;   //    自动模式启动设备
+      IN_xManualCmd : Bool;   //    手动模式下的设备控制辅助命令/1为启动，0为停止
+      IN_xStartCondition : Bool := TRUE;   //    启动设备运行条件
+      OUT_xStartOK : Bool;   //    启动到位
+      OUT_xStopOK : Bool;   //    停止到位
+   END_STRUCT;
+
+END_TYPE

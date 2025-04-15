@@ -1,0 +1,11 @@
+﻿TYPE "UDT_Valve_HMI"
+VERSION : 0.1
+   STRUCT
+      IN_xNormOpen : Bool;   //  常开常闭阀选择/常开为1，常闭为0
+      IN_xManualOpen : Bool;   //  手动开
+      IN_xManualClose : Bool;   //  手动关
+      IN_xCounterReset : Bool;   //  计数复位
+      OUT_uiState : UInt;   //  状态字(0=初始状态,1=已关闭,2=已打开,3=正在打开,4=正在关闭,5=关阀故障,6=开阀故障,7=传感器故障)
+   END_STRUCT;
+
+END_TYPE
