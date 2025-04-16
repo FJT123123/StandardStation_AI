@@ -1,4 +1,4 @@
-﻿﻿TYPE "UDT_HDispenser_Raw"
+﻿TYPE "UDT_HDispenser_Raw"
 VERSION : 0.1
    STRUCT
       备用 : Int;

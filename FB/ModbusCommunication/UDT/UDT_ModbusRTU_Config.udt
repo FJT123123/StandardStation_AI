@@ -1,4 +1,4 @@
-﻿TYPE "UDT_ModbusRTU_Config"
+TYPE "UDT_ModbusRTU_Config"
 VERSION : 0.1
    STRUCT
       xReq : Bool := TRUE;   // Modbus RTU 初始化请求

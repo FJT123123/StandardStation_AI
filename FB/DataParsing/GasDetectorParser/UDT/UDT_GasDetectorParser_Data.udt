@@ -1,4 +1,4 @@
-﻿TYPE "UDT_GasDetectorParser_Data"
+TYPE "UDT_GasDetectorParser_Data"
 VERSION : 0.1
    STRUCT
       OUT_iHeartbeat : Int;   // 心跳计数器

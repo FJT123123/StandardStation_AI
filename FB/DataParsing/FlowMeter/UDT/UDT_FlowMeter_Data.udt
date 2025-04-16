@@ -1,4 +1,4 @@
-﻿TYPE "UDT_FlowMeter_Data"
+TYPE "UDT_FlowMeter_Data"
 VERSION : 0.1
    STRUCT
       OUT_Heartbeat : Int;   // 心跳信号

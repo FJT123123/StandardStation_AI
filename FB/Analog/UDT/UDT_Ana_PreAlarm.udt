@@ -1,4 +1,4 @@
-﻿TYPE "UDT_Ana_PreAlarm"
+TYPE "UDT_Ana_PreAlarm"
 VERSION : 0.1
    STRUCT
       OUT_HPreAlarm : Bool;   //   高预警

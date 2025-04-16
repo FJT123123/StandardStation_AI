@@ -1,4 +1,4 @@
-﻿TYPE "UDT_Ana_Keep"
+TYPE "UDT_Ana_Keep"
 VERSION : 0.1
    STRUCT
       IN_RawHigh : Int;   //   原始值量程上限

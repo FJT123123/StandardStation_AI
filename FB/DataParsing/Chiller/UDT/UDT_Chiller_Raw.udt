@@ -1,4 +1,4 @@
-﻿TYPE "UDT_Chiller_Raw"
+TYPE "UDT_Chiller_Raw"
 VERSION : 0.1
    STRUCT
       IN_OutletTemp : Int;   // Outlet Temperature

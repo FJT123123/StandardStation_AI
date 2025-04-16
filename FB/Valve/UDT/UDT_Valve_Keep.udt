@@ -1,4 +1,4 @@
-﻿TYPE "UDT_Valve_Keep"
+TYPE "UDT_Valve_Keep"
 VERSION : 0.1
    STRUCT
       IN_tOpenTime : Time := T#10S;   //  开阀超时时间

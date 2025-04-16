@@ -1,4 +1,4 @@
-﻿TYPE "UDT_FlowMeter_Raw"
+TYPE "UDT_FlowMeter_Raw"
 VERSION : 0.1
    STRUCT
       IN_ErrorStatus : UInt;   // 错误状态

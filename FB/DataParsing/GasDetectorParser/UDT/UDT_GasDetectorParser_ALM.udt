@@ -1,4 +1,4 @@
-﻿TYPE "UDT_GasDetectorParser_ALM"
+TYPE "UDT_GasDetectorParser_ALM"
 VERSION : 0.1
    STRUCT
       xLevel1Alarm : Bool;   // 一级报警状态 (BIT15)

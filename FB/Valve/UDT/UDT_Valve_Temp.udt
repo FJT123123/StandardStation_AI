@@ -1,4 +1,4 @@
-﻿TYPE "UDT_Valve_Temp"
+TYPE "UDT_Valve_Temp"
 VERSION : 0.1
    STRUCT
       IN_xAutoCmd : Bool;   //  自动模式开阀

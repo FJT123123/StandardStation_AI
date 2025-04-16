@@ -1,4 +1,4 @@
-﻿TYPE "UDT_Valve_HMI"
+TYPE "UDT_Valve_HMI"
 VERSION : 0.1
    STRUCT
       IN_xNormOpen : Bool;   //  常开常闭阀选择/常开为1，常闭为0

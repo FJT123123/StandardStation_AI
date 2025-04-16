@@ -1,4 +1,4 @@
-﻿TYPE "UDT_Device_Map"
+TYPE "UDT_Device_Map"
 VERSION : 0.1
    STRUCT
       IN_xStartFeedback : Bool;   //    设备启动反馈

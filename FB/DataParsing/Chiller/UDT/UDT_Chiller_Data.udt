@@ -1,4 +1,4 @@
-﻿TYPE "UDT_Chiller_Data"
+TYPE "UDT_Chiller_Data"
 VERSION : 0.1
    STRUCT
       OUT_Heartbeat : Int;    // Heartbeat Signal

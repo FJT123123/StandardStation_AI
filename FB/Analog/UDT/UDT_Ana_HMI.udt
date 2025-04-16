@@ -1,4 +1,4 @@
-﻿TYPE "UDT_Ana_HMI"
+TYPE "UDT_Ana_HMI"
 VERSION : 0.1
    STRUCT
       OUT_uiState : UInt;   //   状态字(0=初始状态,1=正常,2=高高报警,3=高报警,4=低报警,5=低低报警,6=传感器故障)

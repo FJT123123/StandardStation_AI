@@ -1,4 +1,4 @@
-﻿TYPE "UDT_HDispenser_Data"
+TYPE "UDT_HDispenser_Data"
 VERSION : 0.1
    STRUCT
       心跳标志 : Int;

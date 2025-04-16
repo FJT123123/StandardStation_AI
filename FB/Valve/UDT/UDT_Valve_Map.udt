@@ -1,4 +1,4 @@
-﻿TYPE "UDT_Valve_Map"
+TYPE "UDT_Valve_Map"
 VERSION : 0.1
    STRUCT
       IN_xOpenFeedback : Bool;   //  传感器开

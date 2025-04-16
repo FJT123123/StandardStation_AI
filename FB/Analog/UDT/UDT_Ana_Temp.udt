@@ -1,4 +1,4 @@
-﻿TYPE "UDT_Ana_Temp"
+TYPE "UDT_Ana_Temp"
 VERSION : 0.1
    STRUCT
       IN_SimMode : Bool;   //   模拟模式

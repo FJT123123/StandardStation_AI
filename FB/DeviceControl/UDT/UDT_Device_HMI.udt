@@ -1,4 +1,4 @@
-﻿TYPE "UDT_Device_HMI"
+TYPE "UDT_Device_HMI"
 VERSION : 0.1
    STRUCT
       IN_xManualStart : Bool;   //    手动启动
