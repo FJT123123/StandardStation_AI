@@ -1,9 +1,0 @@
-TYPE "UDT_Chiller_Data"
-VERSION : 0.1
-   STRUCT
-      OUT_Heartbeat : Int;    // Heartbeat Signal
-      OUT_OutletTemp : Real;  // Outlet Temperature
-      OUT_InletTemp : Real;   // Inlet Temperature
-   END_STRUCT;
-
-END_TYPE

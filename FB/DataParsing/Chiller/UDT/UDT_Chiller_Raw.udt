@@ -1,8 +1,0 @@
-TYPE "UDT_Chiller_Raw"
-VERSION : 0.1
-   STRUCT
-      IN_OutletTemp : Int;   // Outlet Temperature
-      IN_InletTemp : Int;    // Inlet Temperature
-   END_STRUCT;
-
-END_TYPE
