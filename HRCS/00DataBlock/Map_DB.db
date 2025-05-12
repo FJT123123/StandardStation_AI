@@ -1,6 +1,6 @@
-﻿DATA_BLOCK "Map_DB"
+DATA_BLOCK "Map_DB"
 { S7_Optimized_Access := 'FALSE' }
-VERSION : 0.1
+VERSION : 0.2
 NON_RETAIN
    VAR 
       Ana_Map : Array[1..40] of "UDT_Ana_Map";   // 模拟量I/O映射数组[1..40]
@@ -9,7 +9,6 @@ NON_RETAIN
       
       Valve_Map : Array[1..15] of "UDT_Valve_Map";   // 阀门控制I/O映射数组[1..15]
    END_VAR
-
 
 BEGIN
 END_DATA_BLOCK

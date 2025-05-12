@@ -1,10 +1,8 @@
-﻿FUNCTION_BLOCK "Valve_Instance"
+FUNCTION_BLOCK "Valve_Instance"
 TITLE = 阀门控制功能块实例化
 { S7_Optimized_Access := 'TRUE' }
-AUTHOR : 樊江涛
-VERSION : 0.1
-
-
+AUTHOR : AI Generated
+VERSION : 0.2
 
 VAR
     // 循环计数器
